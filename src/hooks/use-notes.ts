@@ -10,7 +10,8 @@ export function useNotes() {
 
   const fetchNotes = useCallback(async () => {
     const supabase = createClient();
-    store.setIsLoading(true);
+    const currentState = useNotesStore.getState();
+    currentState.setIsLoading(true);
 
     let query = supabase
       .from('notes')
@@ -18,7 +19,8 @@ export function useNotes() {
       .order('is_pinned', { ascending: false })
       .order('updated_at', { ascending: false });
 
-    switch (store.filter) {
+    const filter = currentState.filter;
+    switch (filter) {
       case 'all':
         query = query.eq('is_trashed', false).eq('is_archived', false);
         break;
@@ -38,10 +40,10 @@ export function useNotes() {
     if (error) {
       console.error('Error fetching notes:', error);
     } else {
-      store.setNotes(data || []);
+      useNotesStore.getState().setNotes(data || []);
     }
-    store.setIsLoading(false);
-  }, [store.filter]);
+    useNotesStore.getState().setIsLoading(false);
+  }, []);
 
   const createNote = useCallback(async (noteType: 'note' | 'todo' = 'note'): Promise<Note | null> => {
     const supabase = createClient();

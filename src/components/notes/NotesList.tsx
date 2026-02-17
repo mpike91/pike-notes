@@ -12,13 +12,12 @@ interface NotesListProps {
 export function NotesList({ notes, currentNoteId, isLoading }: NotesListProps) {
   if (isLoading) {
     return (
-      <div className="space-y-2 p-2">
+      <div className="space-y-1 px-2 py-2">
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="rounded-lg border border-border-subtle p-3 animate-pulse">
+          <div key={i} className="rounded-lg px-3.5 py-3 animate-pulse">
             <div className="h-4 w-2/3 rounded bg-bg-tertiary" />
             <div className="mt-2 h-3 w-full rounded bg-bg-tertiary" />
-            <div className="mt-1 h-3 w-1/2 rounded bg-bg-tertiary" />
-            <div className="mt-2 h-2.5 w-16 rounded bg-bg-tertiary" />
+            <div className="mt-1.5 h-2.5 w-16 rounded bg-bg-tertiary" />
           </div>
         ))}
       </div>
@@ -30,7 +29,7 @@ export function NotesList({ notes, currentNoteId, isLoading }: NotesListProps) {
   }
 
   return (
-    <div className="space-y-1.5 p-2">
+    <div className="px-2 py-2">
       {notes.map((note) => (
         <NoteCard key={note.id} note={note} isActive={note.id === currentNoteId} />
       ))}

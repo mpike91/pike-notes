@@ -46,17 +46,21 @@ export function CodeMirrorEditor({
           height: '100%',
           flex: '1',
         },
-        '.cm-content': {
+        '.cm-scroller': {
+          overflow: 'auto',
           fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-          lineHeight: '1.65',
+        },
+        '.cm-content': {
+          lineHeight: '1.7',
           padding: '0',
+          minHeight: '100%',
           caretColor: 'var(--accent)',
         },
         '.cm-focused': {
           outline: 'none',
         },
         '.cm-line': {
-          padding: '0',
+          padding: '2px 0',
         },
         '.cm-cursor': {
           borderLeftColor: 'var(--accent)',
@@ -75,9 +79,6 @@ export function CodeMirrorEditor({
         },
         '.cm-gutters': {
           display: 'none',
-        },
-        '.cm-scroller': {
-          overflow: 'auto',
         },
       }),
     [fontSize]

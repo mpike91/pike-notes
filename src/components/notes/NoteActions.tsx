@@ -13,7 +13,6 @@ interface NoteActionsProps {
   onRestore: () => void;
   onDuplicate: () => void;
   onCopy: () => void;
-  onToggleType: () => void;
 }
 
 export function NoteActions({
@@ -25,7 +24,6 @@ export function NoteActions({
   onRestore,
   onDuplicate,
   onCopy,
-  onToggleType,
 }: NoteActionsProps) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -52,13 +50,13 @@ export function NoteActions({
         className="rounded-md p-1.5 text-text-muted hover:text-text-secondary hover:bg-bg-tertiary transition-colors"
         aria-label="Note actions"
       >
-        <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" />
         </svg>
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-1 w-48 rounded-lg border border-border bg-surface py-1 shadow-md">
+        <div className="absolute right-0 top-full z-50 mt-1 w-44 rounded-lg border border-border bg-surface py-1 shadow-md">
           {isTrashed ? (
             <>
               <MenuItem onClick={() => { onRestore(); setOpen(false); }}>
@@ -71,7 +69,7 @@ export function NoteActions({
           ) : (
             <>
               <MenuItem onClick={() => { onPin(); setOpen(false); }}>
-                {note.is_pinned ? 'Unpin' : 'Pin'}
+                {note.is_pinned ? 'Unpin' : 'Pin to top'}
               </MenuItem>
               {isArchived ? (
                 <MenuItem onClick={() => { onArchive(); setOpen(false); }}>
@@ -82,9 +80,6 @@ export function NoteActions({
                   Archive
                 </MenuItem>
               )}
-              <MenuItem onClick={() => { onToggleType(); setOpen(false); }}>
-                Convert to {note.note_type === 'note' ? 'todo' : 'note'}
-              </MenuItem>
               <MenuItem onClick={() => { onDuplicate(); setOpen(false); }}>
                 Duplicate
               </MenuItem>

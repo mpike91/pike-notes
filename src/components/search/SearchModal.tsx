@@ -34,14 +34,13 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
 
   const commands: SearchResult[] = [
     { type: 'command', command: { label: 'New Note', action: () => { router.push('/notes'); onClose(); } } },
-    { type: 'command', command: { label: 'New Todo', action: () => { router.push('/todos'); onClose(); } } },
     { type: 'command', command: { label: 'Theme: Light', action: () => { setTheme('light' as Theme); onClose(); } } },
     { type: 'command', command: { label: 'Theme: Dark (Gray)', action: () => { setTheme('dark-gray' as Theme); onClose(); } } },
     { type: 'command', command: { label: 'Theme: Dark (Slate)', action: () => { setTheme('dark-slate' as Theme); onClose(); } } },
     { type: 'command', command: { label: 'Toggle Focus Mode', action: () => { toggleFocusMode(); onClose(); } } },
-    { type: 'command', command: { label: 'Go to Settings', action: () => { router.push('/settings'); onClose(); } } },
-    { type: 'command', command: { label: 'Go to Archive', action: () => { router.push('/archive'); onClose(); } } },
-    { type: 'command', command: { label: 'Go to Trash', action: () => { router.push('/trash'); onClose(); } } },
+    { type: 'command', command: { label: 'Settings', action: () => { router.push('/settings'); onClose(); } } },
+    { type: 'command', command: { label: 'Archive', action: () => { router.push('/archive'); onClose(); } } },
+    { type: 'command', command: { label: 'Trash', action: () => { router.push('/trash'); onClose(); } } },
   ];
 
   const getResults = useCallback((): SearchResult[] => {
