@@ -41,7 +41,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-bg-primary px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <h1 className="text-2xl font-semibold text-text-primary">Pike Notes</h1>
+          <h1 className="text-2xl font-semibold text-text-primary">PikeNotes</h1>
           <p className="mt-2 text-sm text-text-secondary">
             {isSignUp ? 'Create your account' : 'Sign in to your account'}
           </p>

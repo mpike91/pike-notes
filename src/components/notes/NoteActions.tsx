@@ -13,6 +13,9 @@ interface NoteActionsProps {
   onRestore: () => void;
   onDuplicate: () => void;
   onCopy: () => void;
+  onSetHomeNote?: () => void;
+  onClearHomeNote?: () => void;
+  isHomeNote?: boolean;
 }
 
 export function NoteActions({
@@ -24,6 +27,9 @@ export function NoteActions({
   onRestore,
   onDuplicate,
   onCopy,
+  onSetHomeNote,
+  onClearHomeNote,
+  isHomeNote,
 }: NoteActionsProps) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -47,6 +53,7 @@ export function NoteActions({
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setOpen(!open)}
+        tabIndex={-1}
         className="rounded-md p-1.5 text-text-muted hover:text-text-secondary hover:bg-bg-tertiary transition-colors"
         aria-label="Note actions"
       >
@@ -86,6 +93,17 @@ export function NoteActions({
               <MenuItem onClick={() => { onCopy(); setOpen(false); }}>
                 Copy to clipboard
               </MenuItem>
+              {onSetHomeNote && onClearHomeNote && (
+                isHomeNote ? (
+                  <MenuItem onClick={() => { onClearHomeNote(); setOpen(false); }}>
+                    Remove as home note
+                  </MenuItem>
+                ) : (
+                  <MenuItem onClick={() => { onSetHomeNote(); setOpen(false); }}>
+                    Set as home note
+                  </MenuItem>
+                )
+              )}
               <div className="my-1 border-t border-border" />
               <MenuItem onClick={() => { onTrash(); setOpen(false); }} danger>
                 Move to trash

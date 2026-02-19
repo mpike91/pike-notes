@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { MobileNav } from '@/components/layout/MobileNav';
+import { SplitView } from '@/components/layout/SplitView';
 import { SearchModal } from '@/components/search/SearchModal';
 import { InstallPrompt } from '@/components/ui/InstallPrompt';
 import { useUIStore } from '@/stores/ui-store';
@@ -18,6 +19,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const router = useRouter();
   const focusModeActive = useUIStore((s) => s.focusModeActive);
+  const splitViewActive = useUIStore((s) => s.splitViewActive);
   const { isOnline } = useOffline();
 
   // Set up realtime sync and offline queue flushing
@@ -65,7 +67,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             You're offline. Changes will sync when you reconnect.
           </div>
         )}
-        {children}
+        {splitViewActive ? (
+          <div className="hidden md:flex flex-1 overflow-hidden">
+            <SplitView />
+          </div>
+        ) : null}
+        <div className={cn(splitViewActive && 'md:hidden', 'flex-1 flex flex-col overflow-hidden')}>
+          {children}
+        </div>
       </main>
       {!focusModeActive && <MobileNav />}
       <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />

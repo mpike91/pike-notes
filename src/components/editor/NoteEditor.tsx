@@ -1,45 +1,34 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 import { CodeMirrorEditor } from '@/components/editor/CodeMirrorEditor';
 import { EditorHeader } from '@/components/editor/EditorHeader';
-import { FocusMode } from '@/components/editor/FocusMode';
 import { useNotes } from '@/hooks/use-notes';
 import { useDebouncedCallback } from '@/hooks/use-debounce';
-import { useGlobalShortcuts, useShortcutListener } from '@/hooks/use-shortcuts';
-import { useUIStore } from '@/stores/ui-store';
 import { useSettingsStore } from '@/stores/settings-store';
-import { useNotesStore } from '@/stores/notes-store';
 import type { Note } from '@/types';
 
-export default function NoteEditorPage() {
-  const params = useParams();
+interface NoteEditorProps {
+  noteId: string;
+  autoFocusTitle?: boolean;
+  onBack?: () => void;
+}
+
+export function NoteEditor({ noteId, autoFocusTitle = false, onBack }: NoteEditorProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const noteId = params.id as string;
-  const isNewNote = searchParams.get('new') === '1';
   const titleRef = useRef<HTMLInputElement>(null);
 
   const [note, setNote] = useState<Note | null>(null);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(true);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
-  const saveStatus = useNotesStore((s) => s.saveStatus);
-  const { updateNote, pinNote, archiveNote, unarchiveNote, trashNote, deleteNote, duplicateNote, createNote } = useNotes();
+  const { updateNote: storeUpdateNote, pinNote, archiveNote, unarchiveNote, trashNote, deleteNote, duplicateNote } = useNotes();
   const { tabSize, fontSize, lineHeight, contentMaxWidth, fontFamily, homeNoteId, setHomeNoteId } = useSettingsStore();
-  const { focusModeActive, toggleFocusMode } = useUIStore();
-
-  // Auto-focus title for new notes
-  useEffect(() => {
-    if (isNewNote && !loading && titleRef.current) {
-      titleRef.current.focus();
-      router.replace(`/notes/${noteId}`, { scroll: false });
-    }
-  }, [isNewNote, loading, noteId, router]);
 
   useEffect(() => {
     async function fetchNote() {
@@ -51,7 +40,8 @@ export default function NoteEditorPage() {
         .single();
 
       if (error || !data) {
-        router.push('/notes');
+        if (onBack) onBack();
+        else router.push('/notes');
         return;
       }
 
@@ -62,7 +52,33 @@ export default function NoteEditorPage() {
     }
 
     fetchNote();
-  }, [noteId, router]);
+  }, [noteId, router, onBack]);
+
+  useEffect(() => {
+    if (autoFocusTitle && !loading && titleRef.current) {
+      titleRef.current.focus();
+    }
+  }, [autoFocusTitle, loading]);
+
+  const updateNote = useCallback(async (id: string, updates: Record<string, unknown>) => {
+    setSaveStatus('saving');
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from('notes')
+        .update(updates)
+        .eq('id', id);
+
+      if (error) {
+        setSaveStatus('error');
+      } else {
+        setSaveStatus('saved');
+        setTimeout(() => setSaveStatus('idle'), 2000);
+      }
+    } catch {
+      setSaveStatus('error');
+    }
+  }, []);
 
   const { debouncedFn: debouncedSave } = useDebouncedCallback(
     (updates: { title?: string; content?: string }) => {
@@ -83,15 +99,10 @@ export default function NoteEditorPage() {
     debouncedSave({ content: newContent });
   }, [debouncedSave]);
 
-  const handleForceSave = useCallback(() => {
-    if (note) {
-      updateNote(note.id, { title, content });
-    }
-  }, [note, title, content, updateNote]);
-
   const handleBack = useCallback(() => {
-    router.push('/notes');
-  }, [router]);
+    if (onBack) onBack();
+    else router.push('/notes');
+  }, [onBack, router]);
 
   const handleCopy = useCallback(() => {
     const text = [title, content].filter(Boolean).join('\n\n');
@@ -101,23 +112,23 @@ export default function NoteEditorPage() {
   const handleTrash = useCallback(async () => {
     if (note) {
       await trashNote(note.id);
-      router.push('/notes');
+      handleBack();
     }
-  }, [note, trashNote, router]);
+  }, [note, trashNote, handleBack]);
 
   const handleDelete = useCallback(async () => {
     if (note) {
       await deleteNote(note.id);
-      router.push('/notes');
+      handleBack();
     }
-  }, [note, deleteNote, router]);
+  }, [note, deleteNote, handleBack]);
 
   const handleRestore = useCallback(async () => {
     if (note) {
-      await updateNote(note.id, { is_trashed: false });
-      router.push('/notes');
+      await storeUpdateNote(note.id, { is_trashed: false });
+      handleBack();
     }
-  }, [note, updateNote, router]);
+  }, [note, storeUpdateNote, handleBack]);
 
   const handleDuplicate = useCallback(async () => {
     if (note) {
@@ -131,10 +142,10 @@ export default function NoteEditorPage() {
         await unarchiveNote(note.id);
       } else {
         await archiveNote(note.id);
-        router.push('/notes');
+        handleBack();
       }
     }
-  }, [note, archiveNote, unarchiveNote, router]);
+  }, [note, archiveNote, unarchiveNote, handleBack]);
 
   const handlePin = useCallback(async () => {
     if (note) {
@@ -150,18 +161,6 @@ export default function NoteEditorPage() {
   const handleClearHomeNote = useCallback(() => {
     setHomeNoteId(null);
   }, [setHomeNoteId]);
-
-  const shortcuts = useMemo(() => [
-    { key: 's', ctrl: true, action: handleForceSave },
-    { key: 'f', ctrl: true, shift: true, action: toggleFocusMode },
-    { key: 'n', ctrl: true, action: async () => {
-      const newNote = await createNote();
-      if (newNote) router.push(`/notes/${newNote.id}?new=1`);
-    }},
-  ], [handleForceSave, toggleFocusMode, createNote, router]);
-
-  useGlobalShortcuts(shortcuts);
-  useShortcutListener();
 
   if (loading || !note) {
     return (
@@ -182,7 +181,7 @@ export default function NoteEditorPage() {
   }
 
   return (
-    <>
+    <div className="flex h-full flex-col">
       <EditorHeader
         note={note}
         title={title}
@@ -210,10 +209,9 @@ export default function NoteEditorPage() {
           lineHeight={lineHeight}
           contentMaxWidth={contentMaxWidth}
           fontFamily={fontFamily}
-          autoFocus={!isNewNote}
+          autoFocus={!autoFocusTitle}
         />
 
-        {/* Save indicator */}
         <span className={cn(
           'absolute bottom-3 left-5 md:left-8 z-10 text-[11px] select-none transition-opacity duration-300',
           saveStatus === 'idle' && 'opacity-0',
@@ -226,27 +224,6 @@ export default function NoteEditorPage() {
           {saveStatus === 'error' && 'Error'}
         </span>
       </div>
-
-      {focusModeActive && (
-        <FocusMode>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => handleTitleChange(e.target.value)}
-            placeholder="Untitled"
-            className="mb-4 w-full bg-transparent text-xl font-semibold text-text-primary placeholder:text-text-muted focus:outline-none focus-visible:outline-none"
-          />
-          <CodeMirrorEditor
-            value={content}
-            onChange={handleContentChange}
-            fontSize={fontSize}
-            tabSize={tabSize}
-            lineHeight={lineHeight}
-            contentMaxWidth={contentMaxWidth}
-            fontFamily={fontFamily}
-          />
-        </FocusMode>
-      )}
-    </>
+    </div>
   );
 }

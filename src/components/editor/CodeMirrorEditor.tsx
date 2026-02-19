@@ -5,6 +5,8 @@ import { EditorState } from '@codemirror/state';
 import { EditorView, keymap, placeholder as placeholderExt } from '@codemirror/view';
 import {
   defaultKeymap,
+  history,
+  historyKeymap,
   indentWithTab,
   moveLineUp,
   moveLineDown,
@@ -13,6 +15,13 @@ import {
 import { indentUnit } from '@codemirror/language';
 import { markdown } from '@codemirror/lang-markdown';
 
+const FONT_FAMILY_MAP: Record<string, string> = {
+  inter: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+  system: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+  georgia: 'Georgia, "Times New Roman", serif',
+  mono: '"JetBrains Mono", "Fira Code", Consolas, monospace',
+};
+
 interface CodeMirrorEditorProps {
   value: string;
   onChange: (value: string) => void;
@@ -20,6 +29,9 @@ interface CodeMirrorEditorProps {
   tabSize?: number;
   placeholder?: string;
   autoFocus?: boolean;
+  lineHeight?: number;
+  contentMaxWidth?: number | null;
+  fontFamily?: string;
 }
 
 export function CodeMirrorEditor({
@@ -29,6 +41,9 @@ export function CodeMirrorEditor({
   tabSize = 2,
   placeholder = 'Start writing...',
   autoFocus = false,
+  lineHeight = 1.5,
+  contentMaxWidth = null,
+  fontFamily = 'inter',
 }: CodeMirrorEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
@@ -37,6 +52,8 @@ export function CodeMirrorEditor({
 
   // Track whether we're currently updating from external value
   const isExternalUpdate = useRef(false);
+
+  const resolvedFontFamily = FONT_FAMILY_MAP[fontFamily] || FONT_FAMILY_MAP.inter;
 
   const createTheme = useCallback(
     () =>
@@ -48,13 +65,14 @@ export function CodeMirrorEditor({
         },
         '.cm-scroller': {
           overflow: 'auto',
-          fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+          fontFamily: resolvedFontFamily,
         },
         '.cm-content': {
-          lineHeight: '1.7',
+          lineHeight: String(lineHeight),
           padding: '0',
           minHeight: '100%',
           caretColor: 'var(--accent)',
+          ...(contentMaxWidth ? { maxWidth: `${contentMaxWidth}px`, margin: '0 auto' } : {}),
         },
         '.cm-focused': {
           outline: 'none',
@@ -81,7 +99,7 @@ export function CodeMirrorEditor({
           display: 'none',
         },
       }),
-    [fontSize]
+    [fontSize, lineHeight, contentMaxWidth, resolvedFontFamily]
   );
 
   // Custom keymap for cut-line when nothing selected (Ctrl+X)
@@ -127,8 +145,9 @@ export function CodeMirrorEditor({
     const state = EditorState.create({
       doc: value,
       extensions: [
+        history(),
         cutLineKeymap,
-        keymap.of([indentWithTab]),
+        keymap.of([...historyKeymap, indentWithTab]),
         keymap.of(defaultKeymap),
         indentUnit.of(' '.repeat(tabSize)),
         EditorView.lineWrapping,
@@ -158,9 +177,9 @@ export function CodeMirrorEditor({
       view.destroy();
       viewRef.current = null;
     };
-    // Only recreate when tabSize or fontSize changes, not on value changes
+    // Only recreate when editor settings change, not on value changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tabSize, fontSize]);
+  }, [tabSize, fontSize, lineHeight, contentMaxWidth, fontFamily]);
 
   // Sync external value changes without recreating the editor
   useEffect(() => {

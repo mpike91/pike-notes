@@ -1,7 +1,7 @@
 'use client';
 
-import { cn } from '@/lib/utils';
 import { NoteActions } from '@/components/notes/NoteActions';
+import { useUIStore } from '@/stores/ui-store';
 import type { Note } from '@/types';
 
 interface EditorHeaderProps {
@@ -17,6 +17,10 @@ interface EditorHeaderProps {
   onDuplicate: () => void;
   onCopy: () => void;
   onBack: () => void;
+  titleRef?: React.RefObject<HTMLInputElement | null>;
+  onSetHomeNote?: () => void;
+  onClearHomeNote?: () => void;
+  isHomeNote?: boolean;
 }
 
 export function EditorHeader({
@@ -32,11 +36,19 @@ export function EditorHeader({
   onDuplicate,
   onCopy,
   onBack,
+  titleRef,
+  onSetHomeNote,
+  onClearHomeNote,
+  isHomeNote,
 }: EditorHeaderProps) {
+  const toggleSplitView = useUIStore((s) => s.toggleSplitView);
+  const splitViewActive = useUIStore((s) => s.splitViewActive);
+
   return (
     <div className="flex items-center gap-2 border-b border-border px-4 py-2.5 md:px-6">
       <button
         onClick={onBack}
+        tabIndex={-1}
         className="rounded-md p-1.5 text-text-muted hover:text-text-secondary hover:bg-bg-tertiary transition-colors"
         aria-label="Back to notes"
       >
@@ -46,30 +58,20 @@ export function EditorHeader({
       </button>
 
       <input
+        ref={titleRef}
         type="text"
         value={title}
         onChange={(e) => onTitleChange(e.target.value)}
         placeholder="Untitled"
-        className="flex-1 bg-transparent text-base font-medium text-text-primary placeholder:text-text-muted focus:outline-none"
+        className="flex-1 bg-transparent text-base font-medium text-text-primary placeholder:text-text-muted focus:outline-none focus-visible:outline-none"
       />
-
-      <span className={cn(
-        'text-xs transition-opacity duration-200 select-none',
-        saveStatus === 'idle' && 'opacity-0',
-        saveStatus === 'saving' && 'text-text-muted opacity-100',
-        saveStatus === 'saved' && 'text-success opacity-100',
-        saveStatus === 'error' && 'text-danger opacity-100',
-      )}>
-        {saveStatus === 'saving' && 'Saving...'}
-        {saveStatus === 'saved' && 'Saved'}
-        {saveStatus === 'error' && 'Error'}
-      </span>
 
       {/* Quick actions — always visible */}
       {!note.is_trashed && (
         <>
           <button
             onClick={onArchive}
+            tabIndex={-1}
             className="rounded-md p-1.5 text-text-muted hover:text-text-secondary hover:bg-bg-tertiary transition-colors"
             aria-label={note.is_archived ? 'Unarchive' : 'Archive'}
             title={note.is_archived ? 'Unarchive' : 'Archive'}
@@ -80,6 +82,7 @@ export function EditorHeader({
           </button>
           <button
             onClick={onTrash}
+            tabIndex={-1}
             className="rounded-md p-1.5 text-text-muted hover:text-danger hover:bg-danger/5 transition-colors"
             aria-label="Move to trash"
             title="Move to trash"
@@ -91,6 +94,23 @@ export function EditorHeader({
         </>
       )}
 
+      {/* Split view toggle — desktop only */}
+      <button
+        onClick={() => toggleSplitView(note.id)}
+        tabIndex={-1}
+        className={`hidden md:inline-flex rounded-md p-1.5 transition-colors ${
+          splitViewActive
+            ? 'text-accent bg-accent/10'
+            : 'text-text-muted hover:text-text-secondary hover:bg-bg-tertiary'
+        }`}
+        aria-label="Toggle split view"
+        title="Split view"
+      >
+        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 4.5v15m6-15v15M4.5 19.5h15a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5h-15A1.5 1.5 0 003 6v12a1.5 1.5 0 001.5 1.5z" />
+        </svg>
+      </button>
+
       {/* Overflow menu */}
       <NoteActions
         note={note}
@@ -101,6 +121,9 @@ export function EditorHeader({
         onRestore={onRestore}
         onDuplicate={onDuplicate}
         onCopy={onCopy}
+        onSetHomeNote={onSetHomeNote}
+        onClearHomeNote={onClearHomeNote}
+        isHomeNote={isHomeNote}
       />
     </div>
   );

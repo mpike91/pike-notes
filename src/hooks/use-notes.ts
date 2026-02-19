@@ -17,6 +17,7 @@ export function useNotes() {
       .from('notes')
       .select('*')
       .order('is_pinned', { ascending: false })
+      .order('sort_order', { ascending: true, nullsFirst: false })
       .order('updated_at', { ascending: false });
 
     const filter = currentState.filter;
@@ -135,6 +136,28 @@ export function useNotes() {
     }
   }, [updateNote, store.notes]);
 
+  const reorderPinnedNotes = useCallback(async (orderedIds: string[]) => {
+    const supabase = createClient();
+
+    // Assign sequential sort_order values
+    const updates = orderedIds.map((id, index) => ({
+      id,
+      sort_order: (index + 1) * 1000,
+    }));
+
+    // Optimistic update
+    for (const { id, sort_order } of updates) {
+      store.updateNote(id, { sort_order } as Partial<Note>);
+    }
+
+    // Batch update to Supabase
+    await Promise.all(
+      updates.map(({ id, sort_order }) =>
+        supabase.from('notes').update({ sort_order }).eq('id', id)
+      )
+    );
+  }, []);
+
   const duplicateNote = useCallback(async (id: string) => {
     const note = store.notes.find((n) => n.id === id);
     if (!note) return null;
@@ -184,5 +207,6 @@ export function useNotes() {
     unarchiveNote,
     pinNote,
     duplicateNote,
+    reorderPinnedNotes,
   };
 }

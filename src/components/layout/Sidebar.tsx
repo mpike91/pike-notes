@@ -28,7 +28,9 @@ export function Sidebar() {
         sidebarCollapsed ? 'justify-center' : 'justify-between'
       )}>
         {!sidebarCollapsed && (
-          <span className="text-sm font-semibold text-text-primary">Pike Notes</span>
+          <Link href="/notes" className="text-sm font-semibold text-text-primary hover:text-accent transition-colors">
+            PikeNotes
+          </Link>
         )}
         <button
           onClick={toggleSidebar}

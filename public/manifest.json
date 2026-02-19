@@ -1,6 +1,6 @@
 {
-  "name": "Pike Notes",
-  "short_name": "Pike Notes",
+  "name": "PikeNotes",
+  "short_name": "PikeNotes",
   "description": "Simple. Fast. Synced. A personal note-taking and to-do app.",
   "start_url": "/",
   "display": "standalone",

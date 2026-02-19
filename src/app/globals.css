@@ -32,9 +32,69 @@
 }
 
 /* ============================================================
-   THEME: Dark (Gray)
+   THEME: Light (Contrast)
    ============================================================ */
-[data-theme="dark-gray"] {
+[data-theme="light-contrast"] {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f3f4f6;
+  --bg-tertiary: #e5e7eb;
+  --text-primary: #111827;
+  --text-secondary: #374151;
+  --text-muted: #6b7280;
+  --border: #d1d5db;
+  --border-subtle: #e5e7eb;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --surface: #ffffff;
+  --danger: #dc2626;
+  --success: #16a34a;
+  --warning: #d97706;
+  --priority-high: #dc2626;
+  --priority-medium: #d97706;
+  --priority-low: #6b7280;
+  --sidebar-bg: #f3f4f6;
+  --sidebar-hover: #e5e7eb;
+  --sidebar-active: #d1d5db;
+  --input-bg: #ffffff;
+  --input-border: #9ca3af;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+/* ============================================================
+   THEME: Dark (Light Gray)
+   ============================================================ */
+[data-theme="dark-light-gray"] {
+  --bg-primary: #2a2a2e;
+  --bg-secondary: #333338;
+  --bg-tertiary: #3c3c42;
+  --text-primary: #ececec;
+  --text-secondary: #b0b0b5;
+  --text-muted: #78787e;
+  --border: #444449;
+  --border-subtle: #3c3c42;
+  --accent: #3b82f6;
+  --accent-hover: #60a5fa;
+  --surface: #333338;
+  --danger: #ef4444;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --priority-high: #ef4444;
+  --priority-medium: #f59e0b;
+  --priority-low: #78787e;
+  --sidebar-bg: #2a2a2e;
+  --sidebar-hover: #3c3c42;
+  --sidebar-active: #444449;
+  --input-bg: #3c3c42;
+  --input-border: #555559;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+}
+
+/* ============================================================
+   THEME: Dark (Dark Gray)
+   ============================================================ */
+[data-theme="dark-dark-gray"] {
   --bg-primary: #1a1a1a;
   --bg-secondary: #222222;
   --bg-tertiary: #2a2a2a;
@@ -65,27 +125,27 @@
    THEME: Dark (Slate)
    ============================================================ */
 [data-theme="dark-slate"] {
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
-  --bg-tertiary: #334155;
+  --bg-primary: #1a1f2e;
+  --bg-secondary: #232838;
+  --bg-tertiary: #2e3444;
   --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
+  --text-secondary: #8d95a5;
   --text-muted: #64748b;
-  --border: #334155;
-  --border-subtle: #1e293b;
+  --border: #3a4050;
+  --border-subtle: #232838;
   --accent: #3b82f6;
   --accent-hover: #60a5fa;
-  --surface: #1e293b;
+  --surface: #232838;
   --danger: #ef4444;
   --success: #22c55e;
   --warning: #f59e0b;
   --priority-high: #ef4444;
   --priority-medium: #f59e0b;
   --priority-low: #64748b;
-  --sidebar-bg: #0f172a;
-  --sidebar-hover: #1e293b;
-  --sidebar-active: #334155;
-  --input-bg: #1e293b;
+  --sidebar-bg: #1a1f2e;
+  --sidebar-hover: #232838;
+  --sidebar-active: #3a4050;
+  --input-bg: #232838;
   --input-border: #475569;
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.4);

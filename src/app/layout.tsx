@@ -9,13 +9,13 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Pike Notes',
+  title: 'PikeNotes',
   description: 'Simple. Fast. Synced. A personal note-taking and to-do app.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Pike Notes',
+    title: 'PikeNotes',
   },
 };
 
@@ -31,6 +31,10 @@ const themeScript = `
 (function() {
   try {
     var theme = localStorage.getItem('pike-notes-theme') || 'light';
+    if (theme === 'dark-gray') {
+      theme = 'dark-dark-gray';
+      localStorage.setItem('pike-notes-theme', theme);
+    }
     document.documentElement.setAttribute('data-theme', theme);
   } catch (e) {}
 })();

@@ -12,6 +12,8 @@ export default function NotesPage() {
   const router = useRouter();
   const { notes, isLoading, fetchNotes, createNote } = useNotes();
   const toggleFocusMode = useUIStore((s) => s.toggleFocusMode);
+  const toggleSplitView = useUIStore((s) => s.toggleSplitView);
+  const splitViewActive = useUIStore((s) => s.splitViewActive);
 
   useEffect(() => {
     fetchNotes();
@@ -20,7 +22,7 @@ export default function NotesPage() {
   const handleNewNote = useCallback(async () => {
     const note = await createNote();
     if (note) {
-      router.push(`/notes/${note.id}`);
+      router.push(`/notes/${note.id}?new=1`);
     }
   }, [createNote, router]);
 
@@ -37,15 +39,31 @@ export default function NotesPage() {
       <AppHeader
         title="Notes"
         actions={
-          <button
-            onClick={handleNewNote}
-            className="flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
-          >
-            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-            New
-          </button>
+          <>
+            <button
+              onClick={() => toggleSplitView(null)}
+              className={`hidden md:inline-flex rounded-md p-1.5 transition-colors ${
+                splitViewActive
+                  ? 'text-accent bg-accent/10'
+                  : 'text-text-muted hover:text-text-secondary hover:bg-bg-tertiary'
+              }`}
+              aria-label="Toggle split view"
+              title="Split view"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 4.5v15m6-15v15M4.5 19.5h15a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5h-15A1.5 1.5 0 003 6v12a1.5 1.5 0 001.5 1.5z" />
+              </svg>
+            </button>
+            <button
+              onClick={handleNewNote}
+              className="flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
+            >
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              New
+            </button>
+          </>
         }
       />
       <div className="flex-1 overflow-y-auto">
