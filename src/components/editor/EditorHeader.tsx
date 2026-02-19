@@ -45,7 +45,7 @@ export function EditorHeader({
   const splitViewActive = useUIStore((s) => s.splitViewActive);
 
   return (
-    <div className="flex items-center gap-2 border-b border-border bg-sidebar-bg px-4 py-2.5 md:px-6">
+    <div className="flex items-center gap-2 border-b border-border bg-toolbar-bg px-4 py-2.5 md:px-6">
       <button
         onClick={onBack}
         tabIndex={-1}

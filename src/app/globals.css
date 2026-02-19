@@ -25,6 +25,7 @@
   --sidebar-bg: #f3f4f5;
   --sidebar-hover: #eaebec;
   --sidebar-active: #e2e3e5;
+  --toolbar-bg: #f3f4f5;
   --input-bg: #ffffff;
   --input-border: #d1d5db;
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
@@ -52,9 +53,10 @@
   --priority-high: #ef4444;
   --priority-medium: #f59e0b;
   --priority-low: #78787e;
-  --sidebar-bg: #232327;
-  --sidebar-hover: #2e2e33;
+  --sidebar-bg: #1c1c20;
+  --sidebar-hover: #262629;
   --sidebar-active: #3a3a40;
+  --toolbar-bg: #232327;
   --input-bg: #3c3c42;
   --input-border: #555559;
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
@@ -65,28 +67,29 @@
    THEME: Dark (Slate) — gray-dominant with subtle cool tint
    ============================================================ */
 [data-theme="dark-slate"] {
-  --bg-primary: #1e2024;
-  --bg-secondary: #262830;
-  --bg-tertiary: #2e3038;
+  --bg-primary: #1d2127;
+  --bg-secondary: #252931;
+  --bg-tertiary: #2d313a;
   --text-primary: #e8eaed;
-  --text-secondary: #9098a5;
-  --text-muted: #606875;
-  --border: #363840;
-  --border-subtle: #262830;
+  --text-secondary: #8d95a8;
+  --text-muted: #5d6578;
+  --border: #353a46;
+  --border-subtle: #252931;
   --accent: #3b82f6;
   --accent-hover: #60a5fa;
-  --surface: #262830;
+  --surface: #252931;
   --danger: #ef4444;
   --success: #22c55e;
   --warning: #f59e0b;
   --priority-high: #ef4444;
   --priority-medium: #f59e0b;
-  --priority-low: #606875;
-  --sidebar-bg: #181a1e;
-  --sidebar-hover: #22242a;
-  --sidebar-active: #2e3038;
-  --input-bg: #262830;
-  --input-border: #444850;
+  --priority-low: #5d6578;
+  --sidebar-bg: #141820;
+  --sidebar-hover: #1c2028;
+  --sidebar-active: #2d313a;
+  --toolbar-bg: #191d25;
+  --input-bg: #252931;
+  --input-border: #434852;
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.4);
 }
@@ -112,11 +115,43 @@
   --priority-high: #ef4444;
   --priority-medium: #f59e0b;
   --priority-low: #756568;
-  --sidebar-bg: #1c1719;
-  --sidebar-hover: #261f21;
+  --sidebar-bg: #151113;
+  --sidebar-hover: #1e181a;
   --sidebar-active: #332b2e;
+  --toolbar-bg: #1c1719;
   --input-bg: #2a2325;
   --input-border: #4d4245;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+}
+
+/* ============================================================
+   THEME: Dark (Moss) — gray-dominant with subtle green tint
+   ============================================================ */
+[data-theme="dark-moss"] {
+  --bg-primary: #1d221d;
+  --bg-secondary: #252b25;
+  --bg-tertiary: #2d342d;
+  --text-primary: #e8ede8;
+  --text-secondary: #95a598;
+  --text-muted: #657068;
+  --border: #363d38;
+  --border-subtle: #252b25;
+  --accent: #3b82f6;
+  --accent-hover: #60a5fa;
+  --surface: #252b25;
+  --danger: #ef4444;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --priority-high: #ef4444;
+  --priority-medium: #f59e0b;
+  --priority-low: #657068;
+  --sidebar-bg: #131813;
+  --sidebar-hover: #1b211b;
+  --sidebar-active: #2d342d;
+  --toolbar-bg: #181d18;
+  --input-bg: #252b25;
+  --input-border: #434d45;
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.4);
 }
@@ -145,6 +180,7 @@
   --color-sidebar-bg: var(--sidebar-bg);
   --color-sidebar-hover: var(--sidebar-hover);
   --color-sidebar-active: var(--sidebar-active);
+  --color-toolbar-bg: var(--toolbar-bg);
   --color-input-bg: var(--input-bg);
   --color-input-border: var(--input-border);
   --shadow-sm: var(--shadow-sm);

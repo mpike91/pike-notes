@@ -38,6 +38,7 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
     { type: 'command', command: { label: 'Theme: Dark (Gray)', action: () => { setTheme('dark-gray' as Theme); onClose(); } } },
     { type: 'command', command: { label: 'Theme: Dark (Slate)', action: () => { setTheme('dark-slate' as Theme); onClose(); } } },
     { type: 'command', command: { label: 'Theme: Dark (Wine)', action: () => { setTheme('dark-wine' as Theme); onClose(); } } },
+    { type: 'command', command: { label: 'Theme: Dark (Moss)', action: () => { setTheme('dark-moss' as Theme); onClose(); } } },
     { type: 'command', command: { label: 'Toggle Focus Mode', action: () => { toggleFocusMode(); onClose(); } } },
     { type: 'command', command: { label: 'Settings', action: () => { router.push('/settings'); onClose(); } } },
     { type: 'command', command: { label: 'Archive', action: () => { router.push('/archive'); onClose(); } } },

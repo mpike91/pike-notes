@@ -49,9 +49,10 @@ function getStoredSidebar(): boolean {
 // PWA title bar colors — slightly darker than sidebar-bg for contrast
 const THEME_COLORS: Record<string, string> = {
   'light': '#eaebec',
-  'dark-gray': '#1e1e22',
-  'dark-slate': '#14161a',
-  'dark-wine': '#171315',
+  'dark-gray': '#18181c',
+  'dark-slate': '#10141c',
+  'dark-wine': '#110d0f',
+  'dark-moss': '#0f130f',
 };
 
 export const useUIStore = create<UIState>((set) => ({

@@ -41,9 +41,10 @@ const themeScript = `
     document.documentElement.setAttribute('data-theme', theme);
     var colors = {
       'light': '#eaebec',
-      'dark-gray': '#1e1e22',
-      'dark-slate': '#14161a',
-      'dark-wine': '#171315'
+      'dark-gray': '#18181c',
+      'dark-slate': '#10141c',
+      'dark-wine': '#110d0f',
+      'dark-moss': '#0f130f'
     };
     var meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute('content', colors[theme] || '#eaebec');
