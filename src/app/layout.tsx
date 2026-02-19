@@ -36,6 +36,15 @@ const themeScript = `
       localStorage.setItem('pike-notes-theme', theme);
     }
     document.documentElement.setAttribute('data-theme', theme);
+    var colors = {
+      'light': '#ffffff',
+      'light-contrast': '#ffffff',
+      'dark-light-gray': '#2a2a2e',
+      'dark-dark-gray': '#1a1a1a',
+      'dark-slate': '#1a1f2e'
+    };
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', colors[theme] || '#ffffff');
   } catch (e) {}
 })();
 `;

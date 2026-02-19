@@ -43,6 +43,14 @@ function getStoredSidebar(): boolean {
   return localStorage.getItem('pike-notes-sidebar-collapsed') === 'true';
 }
 
+const THEME_COLORS: Record<string, string> = {
+  'light': '#ffffff',
+  'light-contrast': '#ffffff',
+  'dark-light-gray': '#2a2a2e',
+  'dark-dark-gray': '#1a1a1a',
+  'dark-slate': '#1a1f2e',
+};
+
 export const useUIStore = create<UIState>((set) => ({
   theme: getStoredTheme(),
   sidebarCollapsed: getStoredSidebar(),
@@ -58,6 +66,8 @@ export const useUIStore = create<UIState>((set) => ({
   setTheme: (theme) => {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('pike-notes-theme', theme);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', THEME_COLORS[theme] || '#ffffff');
     set({ theme });
   },
 
