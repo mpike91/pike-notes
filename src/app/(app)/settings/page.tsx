@@ -10,10 +10,9 @@ import type { Theme } from '@/types';
 
 const themes: { value: Theme; label: string; description: string }[] = [
   { value: 'light', label: 'Light', description: 'Clean and bright' },
-  { value: 'light-contrast', label: 'Light (Contrast)', description: 'More prominent grays' },
-  { value: 'dark-light-gray', label: 'Dark (Light Gray)', description: 'Softer dark mode' },
-  { value: 'dark-dark-gray', label: 'Dark (Dark Gray)', description: 'True dark mode' },
-  { value: 'dark-slate', label: 'Dark (Slate)', description: 'Muted blue-gray' },
+  { value: 'dark-gray', label: 'Dark (Gray)', description: 'Neutral dark mode' },
+  { value: 'dark-slate', label: 'Dark (Slate)', description: 'Subtle cool gray' },
+  { value: 'dark-wine', label: 'Dark (Wine)', description: 'Warm muted dark' },
 ];
 
 const lineSpacingOptions = [1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0];
@@ -54,7 +53,7 @@ export default function SettingsPage() {
           {/* Theme */}
           <section>
             <h2 className="text-sm font-medium text-text-primary mb-3">Theme</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               {themes.map((t) => (
                 <button
                   key={t.value}

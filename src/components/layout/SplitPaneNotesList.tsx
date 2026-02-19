@@ -19,7 +19,7 @@ export function SplitPaneNotesList({ onNoteSelect, onNewNote }: SplitPaneNotesLi
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between h-14 px-4 border-b border-border bg-bg-primary">
+      <div className="flex items-center justify-between h-14 px-4 border-b border-border bg-sidebar-bg">
         <h2 className="text-sm font-semibold text-text-primary">Notes</h2>
         <button
           onClick={onNewNote}

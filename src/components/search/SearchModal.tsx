@@ -35,10 +35,9 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
   const commands: SearchResult[] = [
     { type: 'command', command: { label: 'New Note', action: async () => { onClose(); /* Handled by Ctrl+N shortcut or notes page */ router.push('/notes'); } } },
     { type: 'command', command: { label: 'Theme: Light', action: () => { setTheme('light' as Theme); onClose(); } } },
-    { type: 'command', command: { label: 'Theme: Light (Contrast)', action: () => { setTheme('light-contrast' as Theme); onClose(); } } },
-    { type: 'command', command: { label: 'Theme: Dark (Light Gray)', action: () => { setTheme('dark-light-gray' as Theme); onClose(); } } },
-    { type: 'command', command: { label: 'Theme: Dark (Dark Gray)', action: () => { setTheme('dark-dark-gray' as Theme); onClose(); } } },
+    { type: 'command', command: { label: 'Theme: Dark (Gray)', action: () => { setTheme('dark-gray' as Theme); onClose(); } } },
     { type: 'command', command: { label: 'Theme: Dark (Slate)', action: () => { setTheme('dark-slate' as Theme); onClose(); } } },
+    { type: 'command', command: { label: 'Theme: Dark (Wine)', action: () => { setTheme('dark-wine' as Theme); onClose(); } } },
     { type: 'command', command: { label: 'Toggle Focus Mode', action: () => { toggleFocusMode(); onClose(); } } },
     { type: 'command', command: { label: 'Settings', action: () => { router.push('/settings'); onClose(); } } },
     { type: 'command', command: { label: 'Archive', action: () => { router.push('/archive'); onClose(); } } },

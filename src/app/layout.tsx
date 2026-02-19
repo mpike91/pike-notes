@@ -31,20 +31,22 @@ const themeScript = `
 (function() {
   try {
     var theme = localStorage.getItem('pike-notes-theme') || 'light';
-    if (theme === 'dark-gray') {
-      theme = 'dark-dark-gray';
+    if (theme === 'dark-dark-gray' || theme === 'dark-light-gray') {
+      theme = 'dark-gray';
+      localStorage.setItem('pike-notes-theme', theme);
+    } else if (theme === 'light-contrast') {
+      theme = 'light';
       localStorage.setItem('pike-notes-theme', theme);
     }
     document.documentElement.setAttribute('data-theme', theme);
     var colors = {
-      'light': '#ffffff',
-      'light-contrast': '#ffffff',
-      'dark-light-gray': '#2a2a2e',
-      'dark-dark-gray': '#1a1a1a',
-      'dark-slate': '#1a1f2e'
+      'light': '#eaebec',
+      'dark-gray': '#1e1e22',
+      'dark-slate': '#14161a',
+      'dark-wine': '#171315'
     };
     var meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute('content', colors[theme] || '#ffffff');
+    if (meta) meta.setAttribute('content', colors[theme] || '#eaebec');
   } catch (e) {}
 })();
 `;

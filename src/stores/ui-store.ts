@@ -31,8 +31,11 @@ interface UIState {
 function getStoredTheme(): Theme {
   if (typeof window === 'undefined') return 'light';
   let theme = (localStorage.getItem('pike-notes-theme') as string) || 'light';
-  if (theme === 'dark-gray') {
-    theme = 'dark-dark-gray';
+  if (theme === 'dark-dark-gray' || theme === 'dark-light-gray') {
+    theme = 'dark-gray';
+    localStorage.setItem('pike-notes-theme', theme);
+  } else if (theme === 'light-contrast') {
+    theme = 'light';
     localStorage.setItem('pike-notes-theme', theme);
   }
   return theme as Theme;
@@ -43,12 +46,12 @@ function getStoredSidebar(): boolean {
   return localStorage.getItem('pike-notes-sidebar-collapsed') === 'true';
 }
 
+// PWA title bar colors — slightly darker than sidebar-bg for contrast
 const THEME_COLORS: Record<string, string> = {
-  'light': '#ffffff',
-  'light-contrast': '#ffffff',
-  'dark-light-gray': '#2a2a2e',
-  'dark-dark-gray': '#1a1a1a',
-  'dark-slate': '#1a1f2e',
+  'light': '#eaebec',
+  'dark-gray': '#1e1e22',
+  'dark-slate': '#14161a',
+  'dark-wine': '#171315',
 };
 
 export const useUIStore = create<UIState>((set) => ({
