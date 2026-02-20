@@ -1,6 +1,6 @@
 export type { Note, NoteInsert, NoteUpdate, TodoItem, TodoItemInsert, TodoItemUpdate, Tag, NoteTag } from '@/lib/supabase/types';
 
-export type Theme = 'light' | 'dark-gray' | 'dark-slate' | 'dark-wine' | 'dark-moss';
+export type Theme = 'light' | 'dark-gray' | 'dark-slate' | 'dark-wine' | 'dark-moss' | 'dark-coffee';
 
 export type NoteFilter = 'all' | 'todos' | 'archived' | 'trashed';
 

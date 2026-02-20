@@ -9,11 +9,12 @@ import { cn } from '@/lib/utils';
 import type { Theme } from '@/types';
 
 const themes: { value: Theme; label: string; description: string }[] = [
-  { value: 'light', label: 'Light', description: 'Clean and bright' },
-  { value: 'dark-gray', label: 'Dark (Gray)', description: 'Neutral dark mode' },
-  { value: 'dark-slate', label: 'Dark (Slate)', description: 'Subtle cool gray' },
-  { value: 'dark-wine', label: 'Dark (Wine)', description: 'Warm muted dark' },
-  { value: 'dark-moss', label: 'Dark (Moss)', description: 'Earthy muted dark' },
+  { value: 'light', label: 'Light', description: 'Soft and clean' },
+  { value: 'dark-gray', label: 'Gray', description: 'Neutral dark' },
+  { value: 'dark-coffee', label: 'Coffee', description: 'Warm brown' },
+  { value: 'dark-slate', label: 'Slate', description: 'Cool blue-gray' },
+  { value: 'dark-wine', label: 'Wine', description: 'Warm burgundy' },
+  { value: 'dark-moss', label: 'Moss', description: 'Earthy green' },
 ];
 
 const lineSpacingOptions = [1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0];

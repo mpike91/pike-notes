@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useCallback } from 'react';
-import { EditorState } from '@codemirror/state';
-import { EditorView, keymap, placeholder as placeholderExt } from '@codemirror/view';
+import { EditorState, Prec } from '@codemirror/state';
+import { EditorView, keymap } from '@codemirror/view';
 import {
   defaultKeymap,
   history,
@@ -11,6 +11,7 @@ import {
   moveLineUp,
   moveLineDown,
   deleteLine,
+  redo,
 } from '@codemirror/commands';
 import { indentUnit } from '@codemirror/language';
 import { markdown } from '@codemirror/lang-markdown';
@@ -27,7 +28,6 @@ interface CodeMirrorEditorProps {
   onChange: (value: string) => void;
   fontSize?: number;
   tabSize?: number;
-  placeholder?: string;
   autoFocus?: boolean;
   lineHeight?: number;
   contentMaxWidth?: number | null;
@@ -39,7 +39,6 @@ export function CodeMirrorEditor({
   onChange,
   fontSize = 15,
   tabSize = 2,
-  placeholder = 'Start writing...',
   autoFocus = false,
   lineHeight = 1.5,
   contentMaxWidth = null,
@@ -92,9 +91,6 @@ export function CodeMirrorEditor({
           backgroundColor: 'var(--accent) !important',
           opacity: '0.25',
         },
-        '.cm-placeholder': {
-          color: 'var(--text-muted)',
-        },
         '.cm-gutters': {
           display: 'none',
         },
@@ -139,8 +135,9 @@ export function CodeMirrorEditor({
     },
   ]);
 
-  // List continuation: Enter continues lists, Enter/Backspace on empty list items exits list mode
-  const listKeymap = keymap.of([
+  // List continuation: Enter continues lists, Enter/Backspace on empty list items exits list mode.
+  // Wrapped in Prec.high so it runs before defaultKeymap's insertNewlineAndIndent.
+  const listKeymap = Prec.high(keymap.of([
     {
       key: 'Enter',
       run: (view) => {
@@ -152,21 +149,22 @@ export function CodeMirrorEditor({
         const line = state.doc.lineAt(pos);
         const lineText = state.doc.sliceString(line.from, line.to);
 
-        // Match list markers: "- ", "* ", "+ ", "1. ", "12. ", etc.
-        const listMatch = lineText.match(/^(\s*)([-*+]|\d+\.)\s/);
-        if (!listMatch) return false;
-
-        const [fullMatch, indent, marker] = listMatch;
-        const contentAfterMarker = lineText.slice(fullMatch.length);
-
-        // Empty list item: exit list mode
-        if (contentAfterMarker.trim() === '') {
+        // Check if this line is ONLY a list marker (any indent level, no real content).
+        // This must be checked first so empty items exit immediately at any depth.
+        const emptyListLine = /^\s*([-*+]|\d+\.)\s*$/.test(lineText);
+        if (emptyListLine) {
           view.dispatch({
             changes: { from: line.from, to: line.to, insert: '' },
             selection: { anchor: line.from },
           });
           return true;
         }
+
+        // Match list markers for continuation: "- ", "* ", "+ ", "1. ", "12. ", etc.
+        const listMatch = lineText.match(/^(\s*)([-*+]|\d+\.)\s/);
+        if (!listMatch) return false;
+
+        const [, indent, marker] = listMatch;
 
         // Non-empty: continue list, carrying text after cursor to the new line
         const newMarker = /^\d+\./.test(marker)
@@ -194,8 +192,7 @@ export function CodeMirrorEditor({
         const lineText = state.doc.sliceString(line.from, line.to);
 
         // Only handle lines that are JUST a list marker with no content
-        const listMatch = lineText.match(/^(\s*)([-*+]|\d+\.)\s*$/);
-        if (!listMatch) return false;
+        if (!/^\s*([-*+]|\d+\.)\s*$/.test(lineText)) return false;
 
         // Don't intercept if cursor is at the very start of the line (default backspace joins lines)
         if (pos === line.from) return false;
@@ -208,7 +205,7 @@ export function CodeMirrorEditor({
         return true;
       },
     },
-  ]);
+  ]));
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -219,12 +216,11 @@ export function CodeMirrorEditor({
         history(),
         listKeymap,
         cutLineKeymap,
-        keymap.of([...historyKeymap, indentWithTab]),
+        keymap.of([...historyKeymap, { key: 'Ctrl-Shift-z', run: redo }, indentWithTab]),
         keymap.of(defaultKeymap),
         indentUnit.of(' '.repeat(tabSize)),
         EditorView.lineWrapping,
         createTheme(),
-        placeholderExt(placeholder),
         markdown(),
         EditorView.updateListener.of((update) => {
           if (update.docChanged && !isExternalUpdate.current) {

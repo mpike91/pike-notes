@@ -40,14 +40,15 @@ const themeScript = `
     }
     document.documentElement.setAttribute('data-theme', theme);
     var colors = {
-      'light': '#eaebec',
-      'dark-gray': '#18181c',
-      'dark-slate': '#10141c',
-      'dark-wine': '#110d0f',
-      'dark-moss': '#0f130f'
+      'light': '#d9dade',
+      'dark-gray': '#1b1b1f',
+      'dark-slate': '#13171f',
+      'dark-wine': '#1a1015',
+      'dark-moss': '#121812',
+      'dark-coffee': '#201e1a'
     };
     var meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute('content', colors[theme] || '#eaebec');
+    if (meta) meta.setAttribute('content', colors[theme] || '#d9dade');
   } catch (e) {}
 })();
 `;

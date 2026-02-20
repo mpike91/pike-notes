@@ -79,7 +79,7 @@ export function EditorHeader({
         value={title}
         onChange={(e) => onTitleChange(e.target.value)}
         placeholder="Untitled"
-        className="flex-1 bg-transparent text-base font-medium text-text-primary placeholder:text-text-muted focus:outline-none focus-visible:outline-none"
+        className="flex-1 bg-transparent text-base font-medium text-text-primary placeholder:text-text-muted focus:outline-none! focus-visible:outline-none!"
       />
 
       {/* Quick actions — always visible */}

@@ -5,29 +5,29 @@
    ============================================================ */
 :root,
 [data-theme="light"] {
-  --bg-primary: #ffffff;
-  --bg-secondary: #fafafa;
-  --bg-tertiary: #f3f4f6;
+  --bg-primary: #f0f1f3;
+  --bg-secondary: #eaebee;
+  --bg-tertiary: #e4e5e8;
   --text-primary: #111827;
   --text-secondary: #4b5563;
   --text-muted: #9ca3af;
-  --border: #e5e7eb;
-  --border-subtle: #f3f4f6;
+  --border: #d8dade;
+  --border-subtle: #e4e5e8;
   --accent: #2563eb;
   --accent-hover: #1d4ed8;
-  --surface: #ffffff;
+  --surface: #f0f1f3;
   --danger: #dc2626;
   --success: #16a34a;
   --warning: #d97706;
   --priority-high: #dc2626;
   --priority-medium: #d97706;
   --priority-low: #6b7280;
-  --sidebar-bg: #f3f4f5;
-  --sidebar-hover: #eaebec;
-  --sidebar-active: #e2e3e5;
-  --toolbar-bg: #f3f4f5;
-  --input-bg: #ffffff;
-  --input-border: #d1d5db;
+  --sidebar-bg: #e0e1e4;
+  --sidebar-hover: #d8d9dd;
+  --sidebar-active: #d0d1d5;
+  --toolbar-bg: #e7e8eb;
+  --input-bg: #f0f1f3;
+  --input-border: #c8ccd1;
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
 }
@@ -36,29 +36,29 @@
    THEME: Dark (Gray)
    ============================================================ */
 [data-theme="dark-gray"] {
-  --bg-primary: #2a2a2e;
-  --bg-secondary: #333338;
-  --bg-tertiary: #3c3c42;
+  --bg-primary: #2d2d31;
+  --bg-secondary: #36363b;
+  --bg-tertiary: #3f3f45;
   --text-primary: #ececec;
   --text-secondary: #b0b0b5;
-  --text-muted: #78787e;
-  --border: #444449;
-  --border-subtle: #3c3c42;
+  --text-muted: #7b7b81;
+  --border: #474750;
+  --border-subtle: #3f3f45;
   --accent: #3b82f6;
   --accent-hover: #60a5fa;
-  --surface: #333338;
+  --surface: #36363b;
   --danger: #ef4444;
   --success: #22c55e;
   --warning: #f59e0b;
   --priority-high: #ef4444;
   --priority-medium: #f59e0b;
-  --priority-low: #78787e;
-  --sidebar-bg: #1c1c20;
-  --sidebar-hover: #262629;
-  --sidebar-active: #3a3a40;
-  --toolbar-bg: #232327;
-  --input-bg: #3c3c42;
-  --input-border: #555559;
+  --priority-low: #7b7b81;
+  --sidebar-bg: #1f1f23;
+  --sidebar-hover: #29292c;
+  --sidebar-active: #3d3d43;
+  --toolbar-bg: #26262a;
+  --input-bg: #3f3f45;
+  --input-border: #58585c;
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
 }
@@ -67,29 +67,29 @@
    THEME: Dark (Slate) — gray-dominant with subtle cool tint
    ============================================================ */
 [data-theme="dark-slate"] {
-  --bg-primary: #1d2127;
-  --bg-secondary: #252931;
-  --bg-tertiary: #2d313a;
+  --bg-primary: #20242a;
+  --bg-secondary: #282c34;
+  --bg-tertiary: #30343d;
   --text-primary: #e8eaed;
   --text-secondary: #8d95a8;
-  --text-muted: #5d6578;
-  --border: #353a46;
-  --border-subtle: #252931;
+  --text-muted: #606878;
+  --border: #383d49;
+  --border-subtle: #282c34;
   --accent: #3b82f6;
   --accent-hover: #60a5fa;
-  --surface: #252931;
+  --surface: #282c34;
   --danger: #ef4444;
   --success: #22c55e;
   --warning: #f59e0b;
   --priority-high: #ef4444;
   --priority-medium: #f59e0b;
-  --priority-low: #5d6578;
-  --sidebar-bg: #141820;
-  --sidebar-hover: #1c2028;
-  --sidebar-active: #2d313a;
-  --toolbar-bg: #191d25;
-  --input-bg: #252931;
-  --input-border: #434852;
+  --priority-low: #606878;
+  --sidebar-bg: #171b23;
+  --sidebar-hover: #1f232b;
+  --sidebar-active: #30343d;
+  --toolbar-bg: #1c2028;
+  --input-bg: #282c34;
+  --input-border: #464b55;
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.4);
 }
@@ -98,29 +98,29 @@
    THEME: Dark (Wine) — gray-dominant with subtle warm tint
    ============================================================ */
 [data-theme="dark-wine"] {
-  --bg-primary: #221c1e;
-  --bg-secondary: #2a2325;
-  --bg-tertiary: #332b2e;
+  --bg-primary: #2c2226;
+  --bg-secondary: #352a2e;
+  --bg-tertiary: #3e3237;
   --text-primary: #ede8ea;
-  --text-secondary: #a59598;
-  --text-muted: #756568;
-  --border: #3d3335;
-  --border-subtle: #2a2325;
+  --text-secondary: #ab969a;
+  --text-muted: #7b676b;
+  --border: #48393d;
+  --border-subtle: #352a2e;
   --accent: #3b82f6;
   --accent-hover: #60a5fa;
-  --surface: #2a2325;
+  --surface: #352a2e;
   --danger: #ef4444;
   --success: #22c55e;
   --warning: #f59e0b;
   --priority-high: #ef4444;
   --priority-medium: #f59e0b;
-  --priority-low: #756568;
-  --sidebar-bg: #151113;
-  --sidebar-hover: #1e181a;
-  --sidebar-active: #332b2e;
-  --toolbar-bg: #1c1719;
-  --input-bg: #2a2325;
-  --input-border: #4d4245;
+  --priority-low: #7b676b;
+  --sidebar-bg: #1e1519;
+  --sidebar-hover: #271e22;
+  --sidebar-active: #3e3237;
+  --toolbar-bg: #251c20;
+  --input-bg: #352a2e;
+  --input-border: #564850;
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.4);
 }
@@ -129,31 +129,62 @@
    THEME: Dark (Moss) — gray-dominant with subtle green tint
    ============================================================ */
 [data-theme="dark-moss"] {
-  --bg-primary: #1d221d;
-  --bg-secondary: #252b25;
-  --bg-tertiary: #2d342d;
+  --bg-primary: #212821;
+  --bg-secondary: #293029;
+  --bg-tertiary: #313a31;
   --text-primary: #e8ede8;
-  --text-secondary: #95a598;
-  --text-muted: #657068;
-  --border: #363d38;
-  --border-subtle: #252b25;
+  --text-secondary: #98a89b;
+  --text-muted: #68726a;
+  --border: #3a423c;
+  --border-subtle: #293029;
   --accent: #3b82f6;
   --accent-hover: #60a5fa;
-  --surface: #252b25;
+  --surface: #293029;
   --danger: #ef4444;
   --success: #22c55e;
   --warning: #f59e0b;
   --priority-high: #ef4444;
   --priority-medium: #f59e0b;
-  --priority-low: #657068;
-  --sidebar-bg: #131813;
-  --sidebar-hover: #1b211b;
-  --sidebar-active: #2d342d;
-  --toolbar-bg: #181d18;
-  --input-bg: #252b25;
-  --input-border: #434d45;
+  --priority-low: #68726a;
+  --sidebar-bg: #171d17;
+  --sidebar-hover: #1f261f;
+  --sidebar-active: #313a31;
+  --toolbar-bg: #1e241e;
+  --input-bg: #293029;
+  --input-border: #485148;
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+}
+
+/* ============================================================
+   THEME: Dark (Coffee) — warm gray with brown tint, cozy
+   ============================================================ */
+[data-theme="dark-coffee"] {
+  --bg-primary: #302e2a;
+  --bg-secondary: #383531;
+  --bg-tertiary: #413e3a;
+  --text-primary: #edebe8;
+  --text-secondary: #b0aaa1;
+  --text-muted: #7d7870;
+  --border: #4a4641;
+  --border-subtle: #383531;
+  --accent: #3b82f6;
+  --accent-hover: #60a5fa;
+  --surface: #383531;
+  --danger: #ef4444;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --priority-high: #ef4444;
+  --priority-medium: #f59e0b;
+  --priority-low: #7d7870;
+  --sidebar-bg: #24221e;
+  --sidebar-hover: #2c2a26;
+  --sidebar-active: #413e3a;
+  --toolbar-bg: #2b2924;
+  --input-bg: #383531;
+  --input-border: #56524b;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
 }
 
 /* ============================================================

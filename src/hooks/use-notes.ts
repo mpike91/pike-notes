@@ -116,17 +116,34 @@ export function useNotes() {
     }
   }, [fetchNotes]);
 
+  // SAFETY: Permanently delete a note ONLY if both title and content are empty.
+  // This prevents cluttering trash/archive with blank notes the user never used.
+  // The check is intentionally strict: both fields must be whitespace-only strings.
+  // A note with ANY non-whitespace character in either field follows normal flow.
+  const isNoteEmpty = (note: Note): boolean =>
+    note.title.trim() === '' && note.content.trim() === '';
+
   const trashNote = useCallback(async (id: string) => {
+    const note = useNotesStore.getState().notes.find((n) => n.id === id);
+    if (note && isNoteEmpty(note)) {
+      await deleteNote(id);
+      return;
+    }
     await updateNote(id, { is_trashed: true });
-  }, [updateNote]);
+  }, [updateNote, deleteNote]);
 
   const restoreNote = useCallback(async (id: string) => {
     await updateNote(id, { is_trashed: false, is_archived: false });
   }, [updateNote]);
 
   const archiveNote = useCallback(async (id: string) => {
+    const note = useNotesStore.getState().notes.find((n) => n.id === id);
+    if (note && isNoteEmpty(note)) {
+      await deleteNote(id);
+      return;
+    }
     await updateNote(id, { is_archived: true });
-  }, [updateNote]);
+  }, [updateNote, deleteNote]);
 
   const unarchiveNote = useCallback(async (id: string) => {
     await updateNote(id, { is_archived: false });
