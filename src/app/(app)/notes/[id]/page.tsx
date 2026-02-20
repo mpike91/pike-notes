@@ -170,13 +170,15 @@ export default function NoteEditorPage() {
     setHomeNoteId(null);
   }, [setHomeNoteId]);
 
+  const handleNewNote = useCallback(async () => {
+    const newNote = await createNote();
+    if (newNote) router.push(`/notes/${newNote.id}?new=1`);
+  }, [createNote, router]);
+
   const shortcuts = useMemo(() => [
     { key: 's', ctrl: true, action: handleForceSave },
     { key: 'f', ctrl: true, shift: true, action: toggleFocusMode },
-    { key: 'n', ctrl: true, action: async () => {
-      const newNote = await createNote();
-      if (newNote) router.push(`/notes/${newNote.id}?new=1`);
-    }},
+    { key: 'n', ctrl: true, action: handleNewNote },
   ], [handleForceSave, toggleFocusMode, createNote, router]);
 
   useGlobalShortcuts(shortcuts);
@@ -215,6 +217,7 @@ export default function NoteEditorPage() {
         onDuplicate={handleDuplicate}
         onCopy={handleCopy}
         onBack={handleBack}
+        onNewNote={handleNewNote}
         titleRef={titleRef}
         onSetHomeNote={handleSetHomeNote}
         onClearHomeNote={handleClearHomeNote}

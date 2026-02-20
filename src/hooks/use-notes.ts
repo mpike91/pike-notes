@@ -11,7 +11,10 @@ export function useNotes() {
   const fetchNotes = useCallback(async () => {
     const supabase = createClient();
     const currentState = useNotesStore.getState();
-    currentState.setIsLoading(true);
+    // Only show loading skeleton on first load; subsequent fetches refresh silently
+    if (currentState.notes.length === 0) {
+      currentState.setIsLoading(true);
+    }
 
     let query = supabase
       .from('notes')

@@ -17,6 +17,7 @@ interface EditorHeaderProps {
   onDuplicate: () => void;
   onCopy: () => void;
   onBack: () => void;
+  onNewNote?: () => void;
   titleRef?: React.RefObject<HTMLInputElement | null>;
   onSetHomeNote?: () => void;
   onClearHomeNote?: () => void;
@@ -36,6 +37,7 @@ export function EditorHeader({
   onDuplicate,
   onCopy,
   onBack,
+  onNewNote,
   titleRef,
   onSetHomeNote,
   onClearHomeNote,
@@ -56,6 +58,20 @@ export function EditorHeader({
           <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
         </svg>
       </button>
+
+      {onNewNote && (
+        <button
+          onClick={onNewNote}
+          tabIndex={-1}
+          className="rounded-md p-1.5 text-text-muted hover:text-text-secondary hover:bg-bg-tertiary transition-colors"
+          aria-label="New note"
+          title="New note"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+        </button>
+      )}
 
       <input
         ref={titleRef}
