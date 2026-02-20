@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -17,6 +17,8 @@ import {
 } from '@dnd-kit/sortable';
 import { NoteCard } from './NoteCard';
 import { useNotes } from '@/hooks/use-notes';
+import { useNotesStore } from '@/stores/notes-store';
+import { useSettingsStore } from '@/stores/settings-store';
 import type { Note } from '@/types';
 
 interface NotesListProps {
@@ -28,6 +30,9 @@ interface NotesListProps {
 
 export function NotesList({ notes, currentNoteId, isLoading, onNoteClick }: NotesListProps) {
   const { reorderPinnedNotes } = useNotes();
+  const sortBy = useNotesStore((s) => s.sortBy);
+  const sortDirection = useNotesStore((s) => s.sortDirection);
+  const homeNoteId = useSettingsStore((s) => s.homeNoteId);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -37,7 +42,24 @@ export function NotesList({ notes, currentNoteId, isLoading, onNoteClick }: Note
   const pinnedNotes = notes
     .filter((n) => n.is_pinned)
     .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
-  const unpinnedNotes = notes.filter((n) => !n.is_pinned);
+
+  const unpinnedNotes = useMemo(() => {
+    const unsorted = notes.filter((n) => !n.is_pinned);
+    return [...unsorted].sort((a, b) => {
+      // Home note always first among unpinned
+      if (a.id === homeNoteId && b.id !== homeNoteId) return -1;
+      if (b.id === homeNoteId && a.id !== homeNoteId) return 1;
+
+      if (sortBy === 'title') {
+        const cmp = (a.title || '').localeCompare(b.title || '', undefined, { sensitivity: 'base' });
+        return sortDirection === 'asc' ? cmp : -cmp;
+      }
+      // updated_at (or created_at)
+      const aTime = new Date(a[sortBy]).getTime();
+      const bTime = new Date(b[sortBy]).getTime();
+      return sortDirection === 'asc' ? aTime - bTime : bTime - aTime;
+    });
+  }, [notes, sortBy, sortDirection, homeNoteId]);
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {

@@ -3,6 +3,25 @@
 import { create } from 'zustand';
 import type { Note, TodoItem, NoteFilter, SortBy, SortDirection } from '@/types';
 
+function getStoredSort(): { sortBy: SortBy; sortDirection: SortDirection } {
+  if (typeof window === 'undefined') return { sortBy: 'updated_at', sortDirection: 'desc' };
+  try {
+    const stored = localStorage.getItem('pike-notes-sort');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      const sortBy = (['updated_at', 'created_at', 'title'] as SortBy[]).includes(parsed.sortBy)
+        ? parsed.sortBy : 'updated_at';
+      const sortDirection = parsed.sortDirection === 'asc' ? 'asc' : 'desc';
+      return { sortBy, sortDirection };
+    }
+  } catch { /* ignore */ }
+  return { sortBy: 'updated_at', sortDirection: 'desc' };
+}
+
+function saveSort(sortBy: SortBy, sortDirection: SortDirection) {
+  localStorage.setItem('pike-notes-sort', JSON.stringify({ sortBy, sortDirection }));
+}
+
 interface NotesState {
   notes: Note[];
   todoItems: Record<string, TodoItem[]>; // keyed by note_id
@@ -30,13 +49,15 @@ interface NotesState {
   removeTodoItem: (id: string, noteId: string) => void;
 }
 
+const storedSort = getStoredSort();
+
 export const useNotesStore = create<NotesState>((set) => ({
   notes: [],
   todoItems: {},
   currentNoteId: null,
   filter: 'all',
-  sortBy: 'updated_at',
-  sortDirection: 'desc',
+  sortBy: storedSort.sortBy,
+  sortDirection: storedSort.sortDirection,
   isLoading: true,
   saveStatus: 'idle',
 
@@ -61,8 +82,14 @@ export const useNotesStore = create<NotesState>((set) => ({
   setCurrentNoteId: (id) => set({ currentNoteId: id }),
 
   setFilter: (filter) => set({ filter }),
-  setSortBy: (sortBy) => set({ sortBy }),
-  setSortDirection: (direction) => set({ sortDirection: direction }),
+  setSortBy: (sortBy) => set((state) => {
+    saveSort(sortBy, state.sortDirection);
+    return { sortBy };
+  }),
+  setSortDirection: (direction) => set((state) => {
+    saveSort(state.sortBy, direction);
+    return { sortDirection: direction };
+  }),
   setIsLoading: (loading) => set({ isLoading: loading }),
   setSaveStatus: (status) => set({ saveStatus: status }),
 

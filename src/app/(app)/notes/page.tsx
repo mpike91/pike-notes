@@ -7,6 +7,8 @@ import { NotesList } from '@/components/notes/NotesList';
 import { useNotes } from '@/hooks/use-notes';
 import { useGlobalShortcuts, useShortcutListener } from '@/hooks/use-shortcuts';
 import { useUIStore } from '@/stores/ui-store';
+import { useNotesStore } from '@/stores/notes-store';
+import type { SortBy } from '@/types';
 
 export default function NotesPage() {
   const router = useRouter();
@@ -14,6 +16,10 @@ export default function NotesPage() {
   const toggleFocusMode = useUIStore((s) => s.toggleFocusMode);
   const toggleSplitView = useUIStore((s) => s.toggleSplitView);
   const splitViewActive = useUIStore((s) => s.splitViewActive);
+  const sortBy = useNotesStore((s) => s.sortBy);
+  const sortDirection = useNotesStore((s) => s.sortDirection);
+  const setSortBy = useNotesStore((s) => s.setSortBy);
+  const setSortDirection = useNotesStore((s) => s.setSortDirection);
 
   useEffect(() => {
     fetchNotes();
@@ -40,6 +46,30 @@ export default function NotesPage() {
         title="Notes"
         actions={
           <>
+            {/* Sort controls */}
+            <button
+              onClick={() => setSortBy(sortBy === 'updated_at' ? 'title' : 'updated_at')}
+              className="rounded-md px-2 py-1 text-xs font-medium text-text-muted hover:text-text-secondary hover:bg-bg-tertiary transition-colors"
+              title={`Sort by ${sortBy === 'updated_at' ? 'title' : 'date edited'}`}
+            >
+              {sortBy === 'updated_at' ? 'Date' : 'A\u2013Z'}
+            </button>
+            <button
+              onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
+              className="rounded-md p-1.5 text-text-muted hover:text-text-secondary hover:bg-bg-tertiary transition-colors"
+              title={sortDirection === 'asc' ? 'Ascending' : 'Descending'}
+            >
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                {sortDirection === 'asc' ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                )}
+              </svg>
+            </button>
+
+            <div className="w-px h-5 bg-border" />
+
             <button
               onClick={() => toggleSplitView(null)}
               className={`hidden md:inline-flex rounded-md p-1.5 transition-colors ${
