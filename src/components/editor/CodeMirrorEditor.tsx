@@ -78,7 +78,7 @@ export function CodeMirrorEditor({
           outline: 'none',
         },
         '.cm-line': {
-          padding: '2px 0',
+          padding: '0',
         },
         '.cm-cursor': {
           borderLeftColor: 'var(--accent)',
@@ -139,6 +139,77 @@ export function CodeMirrorEditor({
     },
   ]);
 
+  // List continuation: Enter continues lists, Enter/Backspace on empty list items exits list mode
+  const listKeymap = keymap.of([
+    {
+      key: 'Enter',
+      run: (view) => {
+        const { state } = view;
+        const range = state.selection.main;
+        if (!range.empty) return false;
+
+        const pos = range.head;
+        const line = state.doc.lineAt(pos);
+        const lineText = state.doc.sliceString(line.from, line.to);
+
+        // Match list markers: "- ", "* ", "+ ", "1. ", "12. ", etc.
+        const listMatch = lineText.match(/^(\s*)([-*+]|\d+\.)\s/);
+        if (!listMatch) return false;
+
+        const [fullMatch, indent, marker] = listMatch;
+        const contentAfterMarker = lineText.slice(fullMatch.length);
+
+        // Empty list item: exit list mode
+        if (contentAfterMarker.trim() === '') {
+          view.dispatch({
+            changes: { from: line.from, to: line.to, insert: '' },
+            selection: { anchor: line.from },
+          });
+          return true;
+        }
+
+        // Non-empty: continue list, carrying text after cursor to the new line
+        const newMarker = /^\d+\./.test(marker)
+          ? `${parseInt(marker) + 1}.`
+          : marker;
+        const textAfterCursor = state.doc.sliceString(pos, line.to);
+        const newLinePrefix = `\n${indent}${newMarker} `;
+
+        view.dispatch({
+          changes: { from: pos, to: line.to, insert: newLinePrefix + textAfterCursor },
+          selection: { anchor: pos + newLinePrefix.length },
+        });
+        return true;
+      },
+    },
+    {
+      key: 'Backspace',
+      run: (view) => {
+        const { state } = view;
+        const range = state.selection.main;
+        if (!range.empty) return false;
+
+        const pos = range.head;
+        const line = state.doc.lineAt(pos);
+        const lineText = state.doc.sliceString(line.from, line.to);
+
+        // Only handle lines that are JUST a list marker with no content
+        const listMatch = lineText.match(/^(\s*)([-*+]|\d+\.)\s*$/);
+        if (!listMatch) return false;
+
+        // Don't intercept if cursor is at the very start of the line (default backspace joins lines)
+        if (pos === line.from) return false;
+
+        // Remove the marker, cursor to line start
+        view.dispatch({
+          changes: { from: line.from, to: line.to, insert: '' },
+          selection: { anchor: line.from },
+        });
+        return true;
+      },
+    },
+  ]);
+
   useEffect(() => {
     if (!containerRef.current) return;
 
@@ -146,6 +217,7 @@ export function CodeMirrorEditor({
       doc: value,
       extensions: [
         history(),
+        listKeymap,
         cutLineKeymap,
         keymap.of([...historyKeymap, indentWithTab]),
         keymap.of(defaultKeymap),

@@ -12,6 +12,7 @@ import { useUIStore } from '@/stores/ui-store';
 import { useSync, useOfflineSync } from '@/hooks/use-sync';
 import { useOffline } from '@/hooks/use-offline';
 import { useGlobalShortcuts, useShortcutListener } from '@/hooks/use-shortcuts';
+import { useNotes } from '@/hooks/use-notes';
 import { cn } from '@/lib/utils';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -25,6 +26,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   // Set up realtime sync and offline queue flushing
   useSync();
   useOfflineSync();
+
+  // Pre-fetch all notes into store + refresh on tab focus (multi-device freshness)
+  const { fetchNotes } = useNotes();
+  useEffect(() => {
+    if (!isReady) return;
+    fetchNotes();
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') fetchNotes();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [isReady, fetchNotes]);
 
   // Global shortcuts
   const openSearch = useCallback(() => setSearchOpen(true), []);

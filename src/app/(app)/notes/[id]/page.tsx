@@ -23,10 +23,17 @@ export default function NoteEditorPage() {
   const isNewNote = searchParams.get('new') === '1';
   const titleRef = useRef<HTMLInputElement>(null);
 
-  const [note, setNote] = useState<Note | null>(null);
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [loading, setLoading] = useState(true);
+  // Initialize from store for instant render (lazy initializers run only on mount)
+  const getStoreNote = useCallback(
+    () => useNotesStore.getState().notes.find((n) => n.id === noteId) ?? null,
+    [noteId]
+  );
+  const initialNote = useMemo(getStoreNote, [getStoreNote]);
+
+  const [note, setNote] = useState<Note | null>(initialNote);
+  const [title, setTitle] = useState(initialNote?.title ?? '');
+  const [content, setContent] = useState(initialNote?.content ?? '');
+  const [loading, setLoading] = useState(!initialNote);
 
   const saveStatus = useNotesStore((s) => s.saveStatus);
   const { updateNote, pinNote, archiveNote, unarchiveNote, trashNote, deleteNote, duplicateNote, createNote } = useNotes();
@@ -42,6 +49,18 @@ export default function NoteEditorPage() {
   }, [isNewNote, loading, noteId, router]);
 
   useEffect(() => {
+    // Store-first: use cached note for instant switching
+    const storeNote = useNotesStore.getState().notes.find((n) => n.id === noteId);
+    if (storeNote) {
+      setNote(storeNote);
+      setTitle(storeNote.title);
+      setContent(storeNote.content);
+      setLoading(false);
+      return;
+    }
+
+    // Fallback: fetch from Supabase (cold start, direct URL, bookmark)
+    setLoading(true);
     async function fetchNote() {
       const supabase = createClient();
       const { data, error } = await supabase
