@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useCallback, useImperativeHandle } from 'react';
 import type { Ref } from 'react';
-import { EditorState, Prec } from '@codemirror/state';
+import { EditorState, Prec, RangeSetBuilder } from '@codemirror/state';
 import { EditorView, keymap, ViewPlugin, Decoration, type DecorationSet } from '@codemirror/view';
 import type { ViewUpdate } from '@codemirror/view';
 import {
@@ -262,29 +262,31 @@ export function CodeMirrorEditor({
 
   // Hanging indent plugin: aligns wrapped list text with content start
   const hangingIndentPlugin = useCallback(() => {
+    const listPattern = /^(\s*)([-*+]|\d+\.)\s/;
+
     function buildDecorations(view: EditorView): DecorationSet {
-      const decorations: ReturnType<typeof Decoration.line>[] = [];
-      const ranges: { from: number; deco: ReturnType<typeof Decoration.line> }[] = [];
+      const builder = new RangeSetBuilder<Decoration>();
       for (const { from, to } of view.visibleRanges) {
         for (let pos = from; pos <= to; ) {
           const line = view.state.doc.lineAt(pos);
           const lineText = view.state.doc.sliceString(line.from, line.to);
-          const match = lineText.match(/^(\s*)([-*+]|\d+\.)\s/);
+          const match = lineText.match(listPattern);
           if (match) {
             const prefixLen = match[0].length;
-            ranges.push({
-              from: line.from,
-              deco: Decoration.line({
+            builder.add(
+              line.from,
+              line.from,
+              Decoration.line({
                 attributes: {
-                  style: `padding-left: ${prefixLen}ch; text-indent: -${prefixLen}ch;`,
+                  style: `margin-left: ${prefixLen}ch; text-indent: -${prefixLen}ch;`,
                 },
-              }),
-            });
+              })
+            );
           }
           pos = line.to + 1;
         }
       }
-      return Decoration.set(ranges.map(r => r.deco.range(r.from)));
+      return builder.finish();
     }
 
     return ViewPlugin.fromClass(

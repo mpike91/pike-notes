@@ -51,7 +51,7 @@ export function EditorHeader({
   const splitViewActive = useUIStore((s) => s.splitViewActive);
 
   return (
-    <div className="flex items-center gap-2 border-b border-border bg-toolbar-bg px-4 py-3 md:py-2.5 md:px-6">
+    <div className="flex items-center gap-2 border-b border-border bg-toolbar-bg px-4 py-3 md:py-2.5 md:px-6 overflow-hidden">
       <button
         onClick={onBack}
         tabIndex={-1}
@@ -83,7 +83,7 @@ export function EditorHeader({
         value={title}
         onChange={(e) => onTitleChange(e.target.value)}
         placeholder="Untitled"
-        className="flex-1 bg-transparent text-lg md:text-base font-medium text-text-primary placeholder:text-text-muted focus:outline-none! focus-visible:outline-none!"
+        className="flex-1 min-w-0 bg-transparent text-lg md:text-base font-medium text-text-primary placeholder:text-text-muted focus:outline-none! focus-visible:outline-none!"
       />
 
       {/* Indent/outdent — mobile only */}
