@@ -54,10 +54,10 @@ export function NoteActions({
       <button
         onClick={() => setOpen(!open)}
         tabIndex={-1}
-        className="rounded-md p-1.5 text-text-muted hover:text-text-secondary hover:bg-bg-tertiary transition-colors"
+        className="rounded-md p-2 md:p-1.5 text-text-muted hover:text-text-secondary hover:bg-bg-tertiary transition-colors"
         aria-label="Note actions"
       >
-        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <svg className="h-5 w-5 md:h-4 md:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" />
         </svg>
       </button>

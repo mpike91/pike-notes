@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { useUIStore } from '@/stores/ui-store';
@@ -36,9 +37,14 @@ export default function SettingsPage() {
   const router = useRouter();
   const { theme, setTheme } = useUIStore();
   const {
-    tabSize, fontSize, lineHeight, contentMaxWidth, fontFamily, homeNoteId,
-    setTabSize, setFontSize, setLineHeight, setContentMaxWidth, setFontFamily, setHomeNoteId,
+    tabSize, fontSize, lineHeight, contentMaxWidth, fontFamily, homeNoteId, hangingIndent,
+    setTabSize, setFontSize, setLineHeight, setContentMaxWidth, setFontFamily, setHomeNoteId, setHangingIndent,
   } = useSettingsStore();
+
+  const [deviceLabel, setDeviceLabel] = useState('');
+  useEffect(() => {
+    setDeviceLabel(window.innerWidth < 768 ? '(Mobile)' : '(Desktop)');
+  }, []);
 
   async function handleSignOut() {
     const supabase = createClient();
@@ -90,7 +96,24 @@ export default function SettingsPage() {
                 </select>
               </div>
               <div className="flex items-center justify-between">
-                <label className="text-sm text-text-secondary">Font size</label>
+                <label className="text-sm text-text-secondary">Hanging indent</label>
+                <button
+                  onClick={() => setHangingIndent(!hangingIndent)}
+                  className={cn(
+                    'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors',
+                    hangingIndent ? 'bg-accent' : 'bg-bg-tertiary'
+                  )}
+                >
+                  <span
+                    className={cn(
+                      'pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-sm transform transition-transform mt-0.5',
+                      hangingIndent ? 'translate-x-4 ml-0.5' : 'translate-x-0.5'
+                    )}
+                  />
+                </button>
+              </div>
+              <div className="flex items-center justify-between">
+                <label className="text-sm text-text-secondary">Font size {deviceLabel}</label>
                 <select
                   value={fontSize}
                   onChange={(e) => setFontSize(Number(e.target.value))}
@@ -109,7 +132,7 @@ export default function SettingsPage() {
             <h2 className="text-sm font-medium text-text-primary mb-3">Formatting</h2>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-sm text-text-secondary">Line spacing</label>
+                <label className="text-sm text-text-secondary">Line spacing {deviceLabel}</label>
                 <select
                   value={lineHeight}
                   onChange={(e) => setLineHeight(Number(e.target.value))}
@@ -121,7 +144,7 @@ export default function SettingsPage() {
                 </select>
               </div>
               <div className="flex items-center justify-between">
-                <label className="text-sm text-text-secondary">Content width</label>
+                <label className="text-sm text-text-secondary">Content width {deviceLabel}</label>
                 <select
                   value={contentMaxWidth === null ? 'null' : String(contentMaxWidth)}
                   onChange={(e) => setContentMaxWidth(e.target.value === 'null' ? null : Number(e.target.value))}

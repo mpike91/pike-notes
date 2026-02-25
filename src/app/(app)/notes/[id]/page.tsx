@@ -5,6 +5,7 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 import { CodeMirrorEditor } from '@/components/editor/CodeMirrorEditor';
+import type { CodeMirrorEditorHandle } from '@/components/editor/CodeMirrorEditor';
 import { EditorHeader } from '@/components/editor/EditorHeader';
 import { FocusMode } from '@/components/editor/FocusMode';
 import { useNotes } from '@/hooks/use-notes';
@@ -22,6 +23,7 @@ export default function NoteEditorPage() {
   const noteId = params.id as string;
   const isNewNote = searchParams.get('new') === '1';
   const titleRef = useRef<HTMLInputElement>(null);
+  const editorRef = useRef<CodeMirrorEditorHandle>(null);
 
   // Initialize from store for instant render (lazy initializers run only on mount)
   const getStoreNote = useCallback(
@@ -37,7 +39,7 @@ export default function NoteEditorPage() {
 
   const saveStatus = useNotesStore((s) => s.saveStatus);
   const { updateNote, pinNote, archiveNote, unarchiveNote, trashNote, deleteNote, duplicateNote, createNote } = useNotes();
-  const { tabSize, fontSize, lineHeight, contentMaxWidth, fontFamily, homeNoteId, setHomeNoteId } = useSettingsStore();
+  const { tabSize, fontSize, lineHeight, contentMaxWidth, fontFamily, homeNoteId, setHomeNoteId, hangingIndent } = useSettingsStore();
   const { focusModeActive, toggleFocusMode } = useUIStore();
 
   // Auto-focus title for new notes
@@ -175,6 +177,24 @@ export default function NoteEditorPage() {
     if (newNote) router.push(`/notes/${newNote.id}?new=1`);
   }, [createNote, router]);
 
+  const handleIndent = useCallback(() => editorRef.current?.indent(), []);
+  const handleOutdent = useCallback(() => editorRef.current?.outdent(), []);
+
+  const handleEditorWrapperMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const view = editorRef.current?.getView();
+    if (!view) return;
+    // Only handle clicks outside the CodeMirror DOM
+    const cmDom = view.dom;
+    if (cmDom.contains(e.target as Node)) return;
+    e.preventDefault();
+    const pos = view.posAtCoords({ x: e.clientX, y: e.clientY });
+    if (pos != null) {
+      const line = view.state.doc.lineAt(pos);
+      view.dispatch({ selection: { anchor: line.from } });
+    }
+    view.focus();
+  }, []);
+
   const shortcuts = useMemo(() => [
     { key: 's', ctrl: true, action: handleForceSave },
     { key: 'f', ctrl: true, shift: true, action: toggleFocusMode },
@@ -222,9 +242,12 @@ export default function NoteEditorPage() {
         onSetHomeNote={handleSetHomeNote}
         onClearHomeNote={handleClearHomeNote}
         isHomeNote={homeNoteId === note.id}
+        onIndent={handleIndent}
+        onOutdent={handleOutdent}
       />
-      <div className="relative flex flex-1 flex-col overflow-hidden px-5 py-4 md:px-8">
+      <div className="relative flex flex-1 flex-col overflow-hidden px-5 py-4 md:px-8" onMouseDown={handleEditorWrapperMouseDown}>
         <CodeMirrorEditor
+          ref={editorRef}
           value={content}
           onChange={handleContentChange}
           fontSize={fontSize}
@@ -232,6 +255,7 @@ export default function NoteEditorPage() {
           lineHeight={lineHeight}
           contentMaxWidth={contentMaxWidth}
           fontFamily={fontFamily}
+          hangingIndent={hangingIndent}
           autoFocus={!isNewNote}
         />
 
@@ -266,6 +290,7 @@ export default function NoteEditorPage() {
             lineHeight={lineHeight}
             contentMaxWidth={contentMaxWidth}
             fontFamily={fontFamily}
+            hangingIndent={hangingIndent}
           />
         </FocusMode>
       )}

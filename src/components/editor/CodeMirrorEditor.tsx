@@ -1,8 +1,10 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useImperativeHandle } from 'react';
+import type { Ref } from 'react';
 import { EditorState, Prec } from '@codemirror/state';
-import { EditorView, keymap } from '@codemirror/view';
+import { EditorView, keymap, ViewPlugin, Decoration, type DecorationSet } from '@codemirror/view';
+import type { ViewUpdate } from '@codemirror/view';
 import {
   defaultKeymap,
   history,
@@ -23,6 +25,12 @@ const FONT_FAMILY_MAP: Record<string, string> = {
   mono: '"JetBrains Mono", "Fira Code", Consolas, monospace',
 };
 
+export interface CodeMirrorEditorHandle {
+  indent: () => void;
+  outdent: () => void;
+  getView: () => EditorView | null;
+}
+
 interface CodeMirrorEditorProps {
   value: string;
   onChange: (value: string) => void;
@@ -32,6 +40,8 @@ interface CodeMirrorEditorProps {
   lineHeight?: number;
   contentMaxWidth?: number | null;
   fontFamily?: string;
+  hangingIndent?: boolean;
+  ref?: Ref<CodeMirrorEditorHandle>;
 }
 
 export function CodeMirrorEditor({
@@ -43,6 +53,8 @@ export function CodeMirrorEditor({
   lineHeight = 1.5,
   contentMaxWidth = null,
   fontFamily = 'inter',
+  hangingIndent = false,
+  ref,
 }: CodeMirrorEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
@@ -51,6 +63,38 @@ export function CodeMirrorEditor({
 
   // Track whether we're currently updating from external value
   const isExternalUpdate = useRef(false);
+
+  useImperativeHandle(ref, () => ({
+    indent: () => {
+      const view = viewRef.current;
+      if (!view) return;
+      const { state } = view;
+      const line = state.doc.lineAt(state.selection.main.head);
+      const spaces = ' '.repeat(tabSize);
+      view.dispatch({
+        changes: { from: line.from, insert: spaces },
+        selection: { anchor: state.selection.main.head + tabSize },
+      });
+      view.focus();
+    },
+    outdent: () => {
+      const view = viewRef.current;
+      if (!view) return;
+      const { state } = view;
+      const line = state.doc.lineAt(state.selection.main.head);
+      const lineText = state.doc.sliceString(line.from, line.to);
+      const leadingSpaces = lineText.match(/^ */)?.[0].length ?? 0;
+      const removeCount = Math.min(tabSize, leadingSpaces);
+      if (removeCount === 0) return;
+      const cursorOffset = Math.min(removeCount, state.selection.main.head - line.from);
+      view.dispatch({
+        changes: { from: line.from, to: line.from + removeCount },
+        selection: { anchor: state.selection.main.head - cursorOffset },
+      });
+      view.focus();
+    },
+    getView: () => viewRef.current,
+  }));
 
   const resolvedFontFamily = FONT_FAMILY_MAP[fontFamily] || FONT_FAMILY_MAP.inter;
 
@@ -68,7 +112,7 @@ export function CodeMirrorEditor({
         },
         '.cm-content': {
           lineHeight: String(lineHeight),
-          padding: '0',
+          padding: '0 10px',
           minHeight: '100%',
           caretColor: 'var(--accent)',
           ...(contentMaxWidth ? { maxWidth: `${contentMaxWidth}px`, margin: '0 auto' } : {}),
@@ -164,6 +208,15 @@ export function CodeMirrorEditor({
         const listMatch = lineText.match(/^(\s*)([-*+]|\d+\.)\s/);
         if (!listMatch) return false;
 
+        // Cursor at line start: just push the list item down (standard Enter behavior)
+        if (pos === line.from) {
+          view.dispatch({
+            changes: { from: pos, insert: '\n' },
+            selection: { anchor: pos },
+          });
+          return true;
+        }
+
         const [, indent, marker] = listMatch;
 
         // Non-empty: continue list, carrying text after cursor to the new line
@@ -207,6 +260,49 @@ export function CodeMirrorEditor({
     },
   ]));
 
+  // Hanging indent plugin: aligns wrapped list text with content start
+  const hangingIndentPlugin = useCallback(() => {
+    function buildDecorations(view: EditorView): DecorationSet {
+      const decorations: ReturnType<typeof Decoration.line>[] = [];
+      const ranges: { from: number; deco: ReturnType<typeof Decoration.line> }[] = [];
+      for (const { from, to } of view.visibleRanges) {
+        for (let pos = from; pos <= to; ) {
+          const line = view.state.doc.lineAt(pos);
+          const lineText = view.state.doc.sliceString(line.from, line.to);
+          const match = lineText.match(/^(\s*)([-*+]|\d+\.)\s/);
+          if (match) {
+            const prefixLen = match[0].length;
+            ranges.push({
+              from: line.from,
+              deco: Decoration.line({
+                attributes: {
+                  style: `padding-left: ${prefixLen}ch; text-indent: -${prefixLen}ch;`,
+                },
+              }),
+            });
+          }
+          pos = line.to + 1;
+        }
+      }
+      return Decoration.set(ranges.map(r => r.deco.range(r.from)));
+    }
+
+    return ViewPlugin.fromClass(
+      class {
+        decorations: DecorationSet;
+        constructor(view: EditorView) {
+          this.decorations = buildDecorations(view);
+        }
+        update(update: ViewUpdate) {
+          if (update.docChanged || update.viewportChanged) {
+            this.decorations = buildDecorations(update.view);
+          }
+        }
+      },
+      { decorations: (v) => v.decorations }
+    );
+  }, []);
+
   useEffect(() => {
     if (!containerRef.current) return;
 
@@ -222,6 +318,7 @@ export function CodeMirrorEditor({
         EditorView.lineWrapping,
         createTheme(),
         markdown(),
+        ...(hangingIndent ? [hangingIndentPlugin()] : []),
         EditorView.updateListener.of((update) => {
           if (update.docChanged && !isExternalUpdate.current) {
             onChangeRef.current(update.state.doc.toString());
@@ -247,7 +344,7 @@ export function CodeMirrorEditor({
     };
     // Only recreate when editor settings change, not on value changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tabSize, fontSize, lineHeight, contentMaxWidth, fontFamily]);
+  }, [tabSize, fontSize, lineHeight, contentMaxWidth, fontFamily, hangingIndent]);
 
   // Sync external value changes without recreating the editor
   useEffect(() => {

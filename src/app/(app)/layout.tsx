@@ -9,10 +9,12 @@ import { SplitView } from '@/components/layout/SplitView';
 import { SearchModal } from '@/components/search/SearchModal';
 import { InstallPrompt } from '@/components/ui/InstallPrompt';
 import { useUIStore } from '@/stores/ui-store';
+import { useNotesStore } from '@/stores/notes-store';
 import { useSync, useOfflineSync } from '@/hooks/use-sync';
 import { useOffline } from '@/hooks/use-offline';
 import { useGlobalShortcuts, useShortcutListener } from '@/hooks/use-shortcuts';
 import { useNotes } from '@/hooks/use-notes';
+import { useSettingsSync } from '@/hooks/use-settings-sync';
 import { cn } from '@/lib/utils';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -22,16 +24,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const focusModeActive = useUIStore((s) => s.focusModeActive);
   const splitViewActive = useUIStore((s) => s.splitViewActive);
   const { isOnline } = useOffline();
+  const isLoading = useNotesStore((s) => s.isLoading);
 
-  // Set up realtime sync and offline queue flushing
+  // Set up realtime sync, offline queue flushing, and settings sync
   useSync();
   useOfflineSync();
+  useSettingsSync();
 
   // Pre-fetch all notes into store + refresh on tab focus (multi-device freshness)
   const { fetchNotes } = useNotes();
   useEffect(() => {
     if (!isReady) return;
-    fetchNotes();
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') fetchNotes();
     };
@@ -54,9 +57,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         router.push('/login');
       } else {
         setIsReady(true);
+        fetchNotes();
       }
     });
-  }, [router]);
+  }, [router, fetchNotes]);
 
   if (!isReady) {
     return (
@@ -73,6 +77,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         'flex-1 flex flex-col overflow-hidden',
         !focusModeActive && 'pb-16 md:pb-0'
       )}>
+        {/* Loading bar */}
+        {isLoading && (
+          <div className="h-0.5 w-full overflow-hidden bg-accent/10">
+            <div className="h-full w-1/3 bg-accent rounded-full animate-loading-bar" />
+          </div>
+        )}
         {/* Offline indicator */}
         {!isOnline && (
           <div className="flex items-center justify-center gap-2 bg-warning/10 px-3 py-1.5 text-xs text-warning border-b border-warning/20">
