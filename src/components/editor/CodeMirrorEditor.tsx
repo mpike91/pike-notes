@@ -28,6 +28,8 @@ const FONT_FAMILY_MAP: Record<string, string> = {
 export interface CodeMirrorEditorHandle {
   indent: () => void;
   outdent: () => void;
+  moveUp: () => void;
+  moveDown: () => void;
   getView: () => EditorView | null;
 }
 
@@ -91,6 +93,18 @@ export function CodeMirrorEditor({
         changes: { from: line.from, to: line.from + removeCount },
         selection: { anchor: state.selection.main.head - cursorOffset },
       });
+      view.focus();
+    },
+    moveUp: () => {
+      const view = viewRef.current;
+      if (!view) return;
+      moveLineUp(view);
+      view.focus();
+    },
+    moveDown: () => {
+      const view = viewRef.current;
+      if (!view) return;
+      moveLineDown(view);
       view.focus();
     },
     getView: () => viewRef.current,
@@ -266,19 +280,24 @@ export function CodeMirrorEditor({
 
     function buildDecorations(view: EditorView): DecorationSet {
       const builder = new RangeSetBuilder<Decoration>();
+      // Measure prefix widths in pixels using canvas (accurate for proportional fonts)
+      const style = getComputedStyle(view.contentDOM);
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d')!;
+      ctx.font = style.font;
       for (const { from, to } of view.visibleRanges) {
         for (let pos = from; pos <= to; ) {
           const line = view.state.doc.lineAt(pos);
           const lineText = view.state.doc.sliceString(line.from, line.to);
           const match = lineText.match(listPattern);
           if (match) {
-            const prefixLen = match[0].length;
+            const pxWidth = ctx.measureText(match[0]).width;
             builder.add(
               line.from,
               line.from,
               Decoration.line({
                 attributes: {
-                  style: `margin-left: ${prefixLen}ch; text-indent: -${prefixLen}ch;`,
+                  style: `margin-left: ${pxWidth}px; text-indent: -${pxWidth}px;`,
                 },
               })
             );

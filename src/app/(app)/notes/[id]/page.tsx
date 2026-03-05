@@ -179,6 +179,8 @@ export default function NoteEditorPage() {
 
   const handleIndent = useCallback(() => editorRef.current?.indent(), []);
   const handleOutdent = useCallback(() => editorRef.current?.outdent(), []);
+  const handleMoveLineUp = useCallback(() => editorRef.current?.moveUp(), []);
+  const handleMoveLineDown = useCallback(() => editorRef.current?.moveDown(), []);
 
   const handleEditorWrapperMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const view = editorRef.current?.getView();
@@ -244,6 +246,8 @@ export default function NoteEditorPage() {
         isHomeNote={homeNoteId === note.id}
         onIndent={handleIndent}
         onOutdent={handleOutdent}
+        onMoveLineUp={handleMoveLineUp}
+        onMoveLineDown={handleMoveLineDown}
       />
       <div className="relative flex flex-1 flex-col overflow-hidden px-5 py-4 md:px-8" onMouseDown={handleEditorWrapperMouseDown}>
         <CodeMirrorEditor
