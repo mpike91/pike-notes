@@ -3,8 +3,9 @@
 import { useEffect, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useNotesStore } from '@/stores/notes-store';
+import { useFoldersStore } from '@/stores/folders-store';
 import { flushOfflineQueue } from '@/lib/sync/engine';
-import type { Note, TodoItem } from '@/types';
+import type { Note, TodoItem, Folder } from '@/types';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
 export function useSync() {
@@ -54,6 +55,25 @@ export function useSync() {
           } else if (payload.eventType === 'DELETE') {
             const old = payload.old as { id: string; note_id: string };
             state.removeTodoItem(old.id, old.note_id);
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'folders' },
+        (payload) => {
+          const fState = useFoldersStore.getState();
+          if (payload.eventType === 'INSERT') {
+            const folder = payload.new as Folder;
+            if (!fState.folders.some((f) => f.id === folder.id)) {
+              fState.addFolder(folder);
+            }
+          } else if (payload.eventType === 'UPDATE') {
+            const folder = payload.new as Folder;
+            fState.updateFolder(folder.id, folder);
+          } else if (payload.eventType === 'DELETE') {
+            const old = payload.old as { id: string };
+            fState.removeFolderAndDescendants(old.id);
           }
         }
       )

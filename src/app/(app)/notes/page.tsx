@@ -4,10 +4,12 @@ import { useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { NotesList } from '@/components/notes/NotesList';
+import { MobileFolderBar } from '@/components/folders/MobileFolderBar';
 import { useNotes } from '@/hooks/use-notes';
 import { useGlobalShortcuts, useShortcutListener } from '@/hooks/use-shortcuts';
 import { useUIStore } from '@/stores/ui-store';
 import { useNotesStore } from '@/stores/notes-store';
+import { useFoldersStore } from '@/stores/folders-store';
 import type { SortBy } from '@/types';
 
 export default function NotesPage() {
@@ -20,13 +22,21 @@ export default function NotesPage() {
   const sortDirection = useNotesStore((s) => s.sortDirection);
   const setSortBy = useNotesStore((s) => s.setSortBy);
   const setSortDirection = useNotesStore((s) => s.setSortDirection);
+  const selectedFolderId = useFoldersStore((s) => s.selectedFolderId);
+  const selectedFolder = useFoldersStore((s) => s.folders.find((f) => f.id === s.selectedFolderId));
+
+  const filteredNotes = useMemo(() => {
+    if (!selectedFolderId) return notes;
+    return notes.filter((n) => n.folder_id === selectedFolderId);
+  }, [notes, selectedFolderId]);
 
   useEffect(() => {
     fetchNotes();
   }, [fetchNotes]);
 
   const handleNewNote = useCallback(async () => {
-    const note = await createNote();
+    const folderId = useFoldersStore.getState().selectedFolderId;
+    const note = await createNote('note', folderId);
     if (note) {
       router.push(`/notes/${note.id}?new=1`);
     }
@@ -43,7 +53,7 @@ export default function NotesPage() {
   return (
     <>
       <AppHeader
-        title="Notes"
+        title={selectedFolder ? selectedFolder.name : 'Notes'}
         actions={
           <>
             {/* Sort controls */}
@@ -99,17 +109,18 @@ export default function NotesPage() {
           </>
         }
       />
+      <MobileFolderBar />
       <div className="flex-1 overflow-y-auto">
-        {!isLoading && notes.length === 0 ? (
+        {!isLoading && filteredNotes.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center px-4">
             <svg className="h-10 w-10 text-text-muted/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
             </svg>
-            <p className="mt-4 text-sm text-text-muted">No notes yet</p>
+            <p className="mt-4 text-sm text-text-muted">{selectedFolderId ? 'No notes in this folder' : 'No notes yet'}</p>
             <p className="mt-1 text-xs text-text-muted/70">Press Ctrl+N to get started</p>
           </div>
         ) : (
-          <NotesList notes={notes} isLoading={isLoading} />
+          <NotesList notes={filteredNotes} isLoading={isLoading} />
         )}
       </div>
     </>

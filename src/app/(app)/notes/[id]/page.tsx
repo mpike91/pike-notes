@@ -9,6 +9,7 @@ import type { CodeMirrorEditorHandle } from '@/components/editor/CodeMirrorEdito
 import { EditorHeader } from '@/components/editor/EditorHeader';
 import { FocusMode } from '@/components/editor/FocusMode';
 import { useNotes } from '@/hooks/use-notes';
+import { useFolders } from '@/hooks/use-folders';
 import { useDebouncedCallback } from '@/hooks/use-debounce';
 import { useGlobalShortcuts, useShortcutListener } from '@/hooks/use-shortcuts';
 import { useUIStore } from '@/stores/ui-store';
@@ -39,6 +40,7 @@ export default function NoteEditorPage() {
 
   const saveStatus = useNotesStore((s) => s.saveStatus);
   const { updateNote, pinNote, archiveNote, unarchiveNote, trashNote, deleteNote, duplicateNote, createNote } = useNotes();
+  const { moveNoteToFolder } = useFolders();
   const { tabSize, fontSize, lineHeight, contentMaxWidth, fontFamily, homeNoteId, setHomeNoteId, hangingIndent } = useSettingsStore();
   const { focusModeActive, toggleFocusMode } = useUIStore();
 
@@ -177,6 +179,13 @@ export default function NoteEditorPage() {
     if (newNote) router.push(`/notes/${newNote.id}?new=1`);
   }, [createNote, router]);
 
+  const handleMoveToFolder = useCallback(async (folderId: string | null) => {
+    if (note) {
+      await moveNoteToFolder(note.id, folderId);
+      setNote({ ...note, folder_id: folderId });
+    }
+  }, [note, moveNoteToFolder]);
+
   const handleIndent = useCallback(() => editorRef.current?.indent(), []);
   const handleOutdent = useCallback(() => editorRef.current?.outdent(), []);
   const handleMoveLineUp = useCallback(() => editorRef.current?.moveUp(), []);
@@ -248,6 +257,7 @@ export default function NoteEditorPage() {
         onOutdent={handleOutdent}
         onMoveLineUp={handleMoveLineUp}
         onMoveLineDown={handleMoveLineDown}
+        onMoveToFolder={handleMoveToFolder}
       />
       <div className="relative flex flex-1 flex-col overflow-hidden px-5 py-4 md:px-8" onMouseDown={handleEditorWrapperMouseDown}>
         <CodeMirrorEditor

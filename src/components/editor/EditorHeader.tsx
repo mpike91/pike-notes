@@ -26,6 +26,7 @@ interface EditorHeaderProps {
   onOutdent?: () => void;
   onMoveLineUp?: () => void;
   onMoveLineDown?: () => void;
+  onMoveToFolder?: (folderId: string | null) => void;
 }
 
 export function EditorHeader({
@@ -50,6 +51,7 @@ export function EditorHeader({
   onOutdent,
   onMoveLineUp,
   onMoveLineDown,
+  onMoveToFolder,
 }: EditorHeaderProps) {
   const toggleSplitView = useUIStore((s) => s.toggleSplitView);
   const splitViewActive = useUIStore((s) => s.splitViewActive);
@@ -204,6 +206,7 @@ export function EditorHeader({
         onSetHomeNote={onSetHomeNote}
         onClearHomeNote={onClearHomeNote}
         isHomeNote={isHomeNote}
+        onMoveToFolder={onMoveToFolder}
       />
     </div>
   );

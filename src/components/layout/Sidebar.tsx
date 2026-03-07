@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useUIStore } from '@/stores/ui-store';
+import { FolderTree } from '@/components/folders/FolderTree';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -42,7 +43,7 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 py-2 px-2 space-y-0.5">
+      <nav className="py-2 px-2 space-y-0.5">
         {navItems.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
           return (
@@ -64,6 +65,11 @@ export function Sidebar() {
           );
         })}
       </nav>
+
+      {/* Folders */}
+      <div className="flex-1 overflow-y-auto border-t border-border">
+        <FolderTree />
+      </div>
 
       {/* Settings link at bottom */}
       <div className="border-t border-border p-2">

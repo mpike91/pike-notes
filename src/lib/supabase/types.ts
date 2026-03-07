@@ -9,6 +9,51 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      folders: {
+        Row: {
+          id: string;
+          user_id: string;
+          parent_id: string | null;
+          name: string;
+          sort_order: number | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          parent_id?: string | null;
+          name?: string;
+          sort_order?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          parent_id?: string | null;
+          name?: string;
+          sort_order?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "folders_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "folders_parent_id_fkey";
+            columns: ["parent_id"];
+            isOneToOne: false;
+            referencedRelation: "folders";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
       notes: {
         Row: {
           id: string;
@@ -22,6 +67,7 @@ export type Database = {
           trashed_at: string | null;
           color: string;
           sort_order: number | null;
+          folder_id: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -37,6 +83,7 @@ export type Database = {
           trashed_at?: string | null;
           color?: string;
           sort_order?: number | null;
+          folder_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -52,6 +99,7 @@ export type Database = {
           trashed_at?: string | null;
           color?: string;
           sort_order?: number | null;
+          folder_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -61,6 +109,13 @@ export type Database = {
             columns: ["user_id"];
             isOneToOne: false;
             referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "notes_folder_id_fkey";
+            columns: ["folder_id"];
+            isOneToOne: false;
+            referencedRelation: "folders";
             referencedColumns: ["id"];
           }
         ];
@@ -233,6 +288,9 @@ export type Database = {
 export type Note = Database['public']['Tables']['notes']['Row'];
 export type NoteInsert = Database['public']['Tables']['notes']['Insert'];
 export type NoteUpdate = Database['public']['Tables']['notes']['Update'];
+export type Folder = Database['public']['Tables']['folders']['Row'];
+export type FolderInsert = Database['public']['Tables']['folders']['Insert'];
+export type FolderUpdate = Database['public']['Tables']['folders']['Update'];
 export type TodoItem = Database['public']['Tables']['todo_items']['Row'];
 export type TodoItemInsert = Database['public']['Tables']['todo_items']['Insert'];
 export type TodoItemUpdate = Database['public']['Tables']['todo_items']['Update'];

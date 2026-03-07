@@ -2,7 +2,7 @@ import { get, set, del, keys } from 'idb-keyval';
 
 export interface QueuedWrite {
   id: string;
-  table: 'notes' | 'todo_items';
+  table: 'notes' | 'todo_items' | 'folders';
   operation: 'insert' | 'update' | 'delete';
   data: Record<string, unknown>;
   timestamp: number;

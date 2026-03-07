@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { FolderPicker } from '@/components/folders/FolderPicker';
 import type { Note } from '@/types';
 
 interface NoteActionsProps {
@@ -16,6 +17,7 @@ interface NoteActionsProps {
   onSetHomeNote?: () => void;
   onClearHomeNote?: () => void;
   isHomeNote?: boolean;
+  onMoveToFolder?: (folderId: string | null) => void;
 }
 
 export function NoteActions({
@@ -30,8 +32,10 @@ export function NoteActions({
   onSetHomeNote,
   onClearHomeNote,
   isHomeNote,
+  onMoveToFolder,
 }: NoteActionsProps) {
   const [open, setOpen] = useState(false);
+  const [folderPickerOpen, setFolderPickerOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -103,6 +107,20 @@ export function NoteActions({
                     Set as home note
                   </MenuItem>
                 )
+              )}
+              {onMoveToFolder && (
+                <div className="relative">
+                  <MenuItem onClick={() => setFolderPickerOpen(!folderPickerOpen)}>
+                    Move to folder
+                  </MenuItem>
+                  {folderPickerOpen && (
+                    <FolderPicker
+                      currentFolderId={note.folder_id}
+                      onSelect={(folderId) => { onMoveToFolder(folderId); setOpen(false); setFolderPickerOpen(false); }}
+                      onClose={() => setFolderPickerOpen(false)}
+                    />
+                  )}
+                </div>
               )}
               <div className="my-1 border-t border-border" />
               <MenuItem onClick={() => { onTrash(); setOpen(false); }} danger>

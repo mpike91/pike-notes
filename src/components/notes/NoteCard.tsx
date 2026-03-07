@@ -26,6 +26,7 @@ export function NoteCard({ note, isActive, isDraggable, onClick }: NoteCardProps
   } = useSortable({
     id: note.id,
     disabled: !isDraggable,
+    data: { type: 'note', noteId: note.id },
   });
 
   const style = isDraggable

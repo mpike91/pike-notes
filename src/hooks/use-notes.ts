@@ -49,7 +49,7 @@ export function useNotes() {
     useNotesStore.getState().setIsLoading(false);
   }, []);
 
-  const createNote = useCallback(async (noteType: 'note' | 'todo' = 'note'): Promise<Note | null> => {
+  const createNote = useCallback(async (noteType: 'note' | 'todo' = 'note', folderId?: string | null): Promise<Note | null> => {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
@@ -60,6 +60,7 @@ export function useNotes() {
       content: '',
       note_type: noteType,
       sort_order: Date.now(),
+      folder_id: folderId ?? null,
     };
 
     const { data, error } = await supabase
