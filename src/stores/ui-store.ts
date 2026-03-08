@@ -2,9 +2,11 @@
 
 import { create } from 'zustand';
 import type { Theme } from '@/types';
+import { ACCENT_PALETTES } from '@/lib/accent-colors';
 
 interface UIState {
   theme: Theme;
+  accentColor: string | null;
   sidebarCollapsed: boolean;
   focusModeActive: boolean;
   mobileNavOpen: boolean;
@@ -16,6 +18,7 @@ interface UIState {
   splitViewRightNoteId: string | null;
 
   setTheme: (theme: Theme) => void;
+  setAccentColor: (key: string | null) => void;
   toggleSidebar: () => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
   toggleFocusMode: () => void;
@@ -46,6 +49,30 @@ function getStoredSidebar(): boolean {
   return localStorage.getItem('pike-notes-sidebar-collapsed') === 'true';
 }
 
+function getStoredAccentColor(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('pike-notes-accent-color') || null;
+}
+
+function applyAccentColor(theme: Theme, key: string | null) {
+  if (typeof window === 'undefined') return;
+  const el = document.documentElement.style;
+  if (!key || key === 'default') {
+    el.removeProperty('--accent');
+    el.removeProperty('--accent-hover');
+    return;
+  }
+  const palette = ACCENT_PALETTES[theme];
+  const option = palette?.find((o) => o.key === key);
+  if (!option) {
+    el.removeProperty('--accent');
+    el.removeProperty('--accent-hover');
+    return;
+  }
+  el.setProperty('--accent', option.color);
+  el.setProperty('--accent-hover', option.hoverColor);
+}
+
 // PWA title bar colors — slightly darker than sidebar-bg for contrast
 const THEME_COLORS: Record<string, string> = {
   'light': '#d9dade',
@@ -56,8 +83,13 @@ const THEME_COLORS: Record<string, string> = {
   'dark-coffee': '#201e1a',
 };
 
-export const useUIStore = create<UIState>((set) => ({
-  theme: getStoredTheme(),
+const initialTheme = getStoredTheme();
+const initialAccent = getStoredAccentColor();
+applyAccentColor(initialTheme, initialAccent);
+
+export const useUIStore = create<UIState>((set, get) => ({
+  theme: initialTheme,
+  accentColor: initialAccent,
   sidebarCollapsed: getStoredSidebar(),
   focusModeActive: false,
   mobileNavOpen: false,
@@ -73,7 +105,31 @@ export const useUIStore = create<UIState>((set) => ({
     localStorage.setItem('pike-notes-theme', theme);
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute('content', THEME_COLORS[theme] || '#ffffff');
-    set({ theme });
+    // Reset accent on theme change
+    localStorage.removeItem('pike-notes-accent-color');
+    localStorage.removeItem('pike-notes-accent-values');
+    applyAccentColor(theme, null);
+    set({ theme, accentColor: null });
+  },
+
+  setAccentColor: (key) => {
+    const theme = get().theme;
+    applyAccentColor(theme, key);
+    if (!key || key === 'default') {
+      localStorage.removeItem('pike-notes-accent-color');
+      localStorage.removeItem('pike-notes-accent-values');
+    } else {
+      localStorage.setItem('pike-notes-accent-color', key);
+      const palette = ACCENT_PALETTES[theme];
+      const option = palette?.find((o) => o.key === key);
+      if (option) {
+        localStorage.setItem('pike-notes-accent-values', JSON.stringify({
+          accent: option.color,
+          accentHover: option.hoverColor,
+        }));
+      }
+    }
+    set({ accentColor: key });
   },
 
   toggleSidebar: () =>

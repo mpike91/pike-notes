@@ -40,6 +40,19 @@ export function FolderTreeItem({
     data: { type: 'folder', folderId: node.folder.id },
   });
 
+  const [wasDropped, setWasDropped] = useState(false);
+  const wasOverRef = useRef(false);
+
+  useEffect(() => {
+    // Detect isOver transitioning from true → false (drop completed)
+    if (wasOverRef.current && !isOver) {
+      setWasDropped(true);
+      const timer = setTimeout(() => setWasDropped(false), 600);
+      return () => clearTimeout(timer);
+    }
+    wasOverRef.current = isOver;
+  }, [isOver]);
+
   useEffect(() => {
     if (isRenaming && inputRef.current) {
       inputRef.current.focus();
@@ -86,11 +99,12 @@ export function FolderTreeItem({
     <div ref={setNodeRef} className="relative">
       <div
         className={cn(
-          'flex items-center gap-1 rounded-md px-2 py-1.5 text-sm cursor-pointer transition-colors group',
+          'flex items-center gap-1 rounded-md px-2 py-1.5 text-sm cursor-pointer group',
           isSelected
             ? 'bg-sidebar-active text-text-primary font-medium'
             : 'text-text-secondary hover:bg-sidebar-hover hover:text-text-primary',
-          isOver && 'ring-1 ring-accent bg-accent/5'
+          isOver && 'ring-1 ring-accent bg-accent/10',
+          wasDropped && 'bg-accent/15 transition-colors duration-500'
         )}
         style={{ paddingLeft: `${node.depth * 16 + 8}px` }}
         onClick={() => onSelect(node.folder.id)}

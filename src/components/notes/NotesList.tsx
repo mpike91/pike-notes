@@ -1,23 +1,13 @@
 'use client';
 
-import { useCallback, useMemo } from 'react';
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from '@dnd-kit/core';
+import { useMemo } from 'react';
 import {
   SortableContext,
-  sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { NoteCard } from './NoteCard';
-import { useNotes } from '@/hooks/use-notes';
 import { useNotesStore } from '@/stores/notes-store';
+import { useFoldersStore } from '@/stores/folders-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import type { Note } from '@/types';
 
@@ -29,15 +19,20 @@ interface NotesListProps {
 }
 
 export function NotesList({ notes, currentNoteId, isLoading, onNoteClick }: NotesListProps) {
-  const { reorderPinnedNotes } = useNotes();
   const sortBy = useNotesStore((s) => s.sortBy);
   const sortDirection = useNotesStore((s) => s.sortDirection);
   const homeNoteId = useSettingsStore((s) => s.homeNoteId);
+  const folders = useFoldersStore((s) => s.folders);
+  const selectedFolderId = useFoldersStore((s) => s.selectedFolderId);
+  const showUnfiled = useFoldersStore((s) => s.showUnfiled);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-  );
+  const isAllNotesView = !selectedFolderId && !showUnfiled;
+  const folderMap = useMemo(() => {
+    if (!isAllNotesView) return null;
+    const map = new Map<string, string>();
+    for (const f of folders) map.set(f.id, f.name);
+    return map;
+  }, [isAllNotesView, folders]);
 
   const pinnedNotes = notes
     .filter((n) => n.is_pinned)
@@ -50,6 +45,12 @@ export function NotesList({ notes, currentNoteId, isLoading, onNoteClick }: Note
       if (a.id === homeNoteId && b.id !== homeNoteId) return -1;
       if (b.id === homeNoteId && a.id !== homeNoteId) return 1;
 
+      if (sortBy === 'custom') {
+        const aOrder = a.sort_order ?? Number.MAX_SAFE_INTEGER;
+        const bOrder = b.sort_order ?? Number.MAX_SAFE_INTEGER;
+        return aOrder - bOrder;
+      }
+
       if (sortBy === 'title') {
         const cmp = (a.title || '').localeCompare(b.title || '', undefined, { sensitivity: 'base' });
         return sortDirection === 'asc' ? cmp : -cmp;
@@ -60,24 +61,6 @@ export function NotesList({ notes, currentNoteId, isLoading, onNoteClick }: Note
       return sortDirection === 'asc' ? aTime - bTime : bTime - aTime;
     });
   }, [notes, sortBy, sortDirection, homeNoteId]);
-
-  const handleDragEnd = useCallback(
-    (event: DragEndEvent) => {
-      const { active, over } = event;
-      if (!over || active.id === over.id) return;
-
-      const oldIndex = pinnedNotes.findIndex((n) => n.id === active.id);
-      const newIndex = pinnedNotes.findIndex((n) => n.id === over.id);
-      if (oldIndex === -1 || newIndex === -1) return;
-
-      const reordered = [...pinnedNotes];
-      const [moved] = reordered.splice(oldIndex, 1);
-      reordered.splice(newIndex, 0, moved);
-
-      reorderPinnedNotes(reordered.map((n) => n.id));
-    },
-    [pinnedNotes, reorderPinnedNotes]
-  );
 
   if (isLoading) {
     return (
@@ -106,26 +89,22 @@ export function NotesList({ notes, currentNoteId, isLoading, onNoteClick }: Note
           <div className="px-3.5 pt-1 pb-1.5 text-[11px] font-medium uppercase tracking-wider text-text-muted">
             Pinned
           </div>
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
+          <SortableContext
+            items={pinnedNotes.map((n) => n.id)}
+            strategy={verticalListSortingStrategy}
           >
-            <SortableContext
-              items={pinnedNotes.map((n) => n.id)}
-              strategy={verticalListSortingStrategy}
-            >
+            <div className="space-y-1">
               {pinnedNotes.map((note) => (
                 <NoteCard
                   key={note.id}
                   note={note}
                   isActive={note.id === currentNoteId}
-                  isDraggable
+                  folderName={folderMap && note.folder_id ? folderMap.get(note.folder_id) : undefined}
                   onClick={onNoteClick}
                 />
               ))}
-            </SortableContext>
-          </DndContext>
+            </div>
+          </SortableContext>
 
           {unpinnedNotes.length > 0 && (
             <div className="px-3.5 pt-3 pb-1.5 text-[11px] font-medium uppercase tracking-wider text-text-muted">
@@ -134,14 +113,22 @@ export function NotesList({ notes, currentNoteId, isLoading, onNoteClick }: Note
           )}
         </>
       )}
-      {unpinnedNotes.map((note) => (
-        <NoteCard
-          key={note.id}
-          note={note}
-          isActive={note.id === currentNoteId}
-          onClick={onNoteClick}
-        />
-      ))}
+      <SortableContext
+        items={unpinnedNotes.map((n) => n.id)}
+        strategy={verticalListSortingStrategy}
+      >
+        <div className="space-y-1">
+          {unpinnedNotes.map((note) => (
+            <NoteCard
+              key={note.id}
+              note={note}
+              isActive={note.id === currentNoteId}
+              folderName={folderMap && note.folder_id ? folderMap.get(note.folder_id) : undefined}
+              onClick={onNoteClick}
+            />
+          ))}
+        </div>
+      </SortableContext>
     </div>
   );
 }

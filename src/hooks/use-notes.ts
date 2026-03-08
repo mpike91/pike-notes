@@ -179,6 +179,27 @@ export function useNotes() {
     );
   }, []);
 
+  const reorderNotes = useCallback(async (orderedIds: string[]) => {
+    const supabase = createClient();
+
+    const updates = orderedIds.map((id, index) => ({
+      id,
+      sort_order: (index + 1) * 1000,
+    }));
+
+    // Optimistic update
+    for (const { id, sort_order } of updates) {
+      store.updateNote(id, { sort_order } as Partial<Note>);
+    }
+
+    // Batch update to Supabase
+    await Promise.all(
+      updates.map(({ id, sort_order }) =>
+        supabase.from('notes').update({ sort_order }).eq('id', id)
+      )
+    );
+  }, []);
+
   const duplicateNote = useCallback(async (id: string) => {
     const note = store.notes.find((n) => n.id === id);
     if (!note) return null;
@@ -229,5 +250,6 @@ export function useNotes() {
     pinNote,
     duplicateNote,
     reorderPinnedNotes,
+    reorderNotes,
   };
 }

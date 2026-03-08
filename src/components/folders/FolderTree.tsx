@@ -21,6 +21,9 @@ export function FolderTree() {
     deleteFolder,
   } = useFolders();
 
+  const showUnfiled = useFoldersStore((s) => s.showUnfiled);
+  const setShowUnfiled = useFoldersStore((s) => s.setShowUnfiled);
+
   const sidebarCollapsed = useUIStore((s) => s.sidebarCollapsed);
 
   const tree = useMemo(() => buildFolderTree(folders), [folders]);
@@ -40,7 +43,7 @@ export function FolderTree() {
     return (
       <div className="px-2 py-1">
         <button
-          onClick={() => setSelectedFolderId(null)}
+          onClick={() => setShowUnfiled(true)}
           className="flex justify-center w-full rounded-md p-2 text-text-muted hover:text-text-secondary hover:bg-sidebar-hover transition-colors"
           title="Folders"
         >
@@ -70,22 +73,22 @@ export function FolderTree() {
         </button>
       </div>
 
-      {/* All Notes */}
+      {/* Home (unfiled notes) */}
       <div
         ref={setAllRef}
         className={cn(
-          'flex items-center gap-2 rounded-md px-2 py-1.5 text-sm cursor-pointer transition-colors',
-          selectedFolderId === null
+          'flex items-center gap-2 rounded-md px-2 py-1.5 text-sm cursor-pointer',
+          showUnfiled
             ? 'bg-sidebar-active text-text-primary font-medium'
             : 'text-text-secondary hover:bg-sidebar-hover hover:text-text-primary',
-          isOverAll && 'ring-1 ring-accent bg-accent/5'
+          isOverAll && 'ring-1 ring-accent bg-accent/10'
         )}
-        onClick={() => setSelectedFolderId(null)}
+        onClick={() => setShowUnfiled(true)}
       >
         <svg className="h-4 w-4 shrink-0 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
         </svg>
-        <span>All Notes</span>
+        <span>Home</span>
       </div>
 
       {/* Folder tree */}

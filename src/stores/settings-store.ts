@@ -10,6 +10,7 @@ interface SizingSettings {
 
 export interface SettingsJson {
   theme?: string;
+  accentColor?: string | null;
   tabSize?: number;
   fontFamily?: string;
   homeNoteId?: string | null;
@@ -45,7 +46,7 @@ interface SettingsState {
 
   // Sync methods
   _loadFromJson: (json: SettingsJson) => void;
-  _toJson: (theme: string) => SettingsJson;
+  _toJson: (theme: string, accentColor?: string | null) => SettingsJson;
   _isMobile: () => boolean;
 }
 
@@ -232,10 +233,11 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
       saveSettings(get());
     },
 
-    _toJson: (theme: string): SettingsJson => {
+    _toJson: (theme: string, accentColor?: string | null): SettingsJson => {
       const state = get();
       return {
         theme,
+        accentColor,
         tabSize: state.tabSize,
         fontFamily: state.fontFamily,
         homeNoteId: state.homeNoteId,

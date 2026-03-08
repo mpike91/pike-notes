@@ -12,5 +12,5 @@ export type Theme = 'light' | 'dark-gray' | 'dark-slate' | 'dark-wine' | 'dark-m
 
 export type NoteFilter = 'all' | 'todos' | 'archived' | 'trashed';
 
-export type SortBy = 'updated_at' | 'created_at' | 'title';
+export type SortBy = 'updated_at' | 'created_at' | 'title' | 'custom';
 export type SortDirection = 'asc' | 'desc';

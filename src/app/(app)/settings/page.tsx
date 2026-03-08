@@ -7,6 +7,7 @@ import { useUIStore } from '@/stores/ui-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { cn } from '@/lib/utils';
+import { ACCENT_PALETTES } from '@/lib/accent-colors';
 import type { Theme } from '@/types';
 
 const themes: { value: Theme; label: string; description: string }[] = [
@@ -35,7 +36,7 @@ const fontOptions: { value: string; label: string }[] = [
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { theme, setTheme } = useUIStore();
+  const { theme, setTheme, accentColor, setAccentColor } = useUIStore();
   const {
     tabSize, fontSize, lineHeight, contentMaxWidth, fontFamily, homeNoteId, hangingIndent,
     setTabSize, setFontSize, setLineHeight, setContentMaxWidth, setFontFamily, setHomeNoteId, setHangingIndent,
@@ -77,6 +78,32 @@ export default function SettingsPage() {
                   <div className="text-xs text-text-muted mt-0.5">{t.description}</div>
                 </button>
               ))}
+            </div>
+          </section>
+
+          {/* Accent Color */}
+          <section>
+            <h2 className="text-sm font-medium text-text-primary mb-3">Accent Color</h2>
+            <div className="flex gap-2">
+              {ACCENT_PALETTES[theme].map((option) => {
+                const isSelected = option.key === 'default'
+                  ? !accentColor || accentColor === 'default'
+                  : accentColor === option.key;
+                return (
+                  <button
+                    key={option.key}
+                    title={option.label}
+                    onClick={() => setAccentColor(option.key === 'default' ? null : option.key)}
+                    className={cn(
+                      'h-8 w-8 rounded-full border-2 transition-all',
+                      isSelected
+                        ? 'border-text-primary scale-110'
+                        : 'border-transparent hover:border-text-muted'
+                    )}
+                    style={{ backgroundColor: option.color }}
+                  />
+                );
+              })}
             </div>
           </section>
 

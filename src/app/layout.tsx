@@ -49,6 +49,11 @@ const themeScript = `
     };
     var meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute('content', colors[theme] || '#d9dade');
+    var av = localStorage.getItem('pike-notes-accent-values');
+    if (av) { try { av = JSON.parse(av);
+      if (av.accent) document.documentElement.style.setProperty('--accent', av.accent);
+      if (av.accentHover) document.documentElement.style.setProperty('--accent-hover', av.accentHover);
+    } catch(e2) {} }
   } catch (e) {}
 })();
 `;

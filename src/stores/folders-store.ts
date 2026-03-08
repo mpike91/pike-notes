@@ -20,6 +20,7 @@ function saveExpandedIds(ids: Set<string>) {
 interface FoldersState {
   folders: Folder[];
   selectedFolderId: string | null;
+  showUnfiled: boolean;
   expandedFolderIds: Set<string>;
 
   setFolders: (folders: Folder[]) => void;
@@ -28,6 +29,7 @@ interface FoldersState {
   removeFolder: (id: string) => void;
   removeFolderAndDescendants: (id: string) => void;
   setSelectedFolderId: (id: string | null) => void;
+  setShowUnfiled: (value: boolean) => void;
   toggleFolderExpanded: (id: string) => void;
   expandFolder: (id: string) => void;
 }
@@ -37,6 +39,7 @@ const storedExpanded = getStoredExpandedIds();
 export const useFoldersStore = create<FoldersState>((set) => ({
   folders: [],
   selectedFolderId: null,
+  showUnfiled: false,
   expandedFolderIds: storedExpanded,
 
   setFolders: (folders) => set({ folders }),
@@ -68,7 +71,9 @@ export const useFoldersStore = create<FoldersState>((set) => ({
       };
     }),
 
-  setSelectedFolderId: (id) => set({ selectedFolderId: id }),
+  setSelectedFolderId: (id) => set({ selectedFolderId: id, ...(id != null && { showUnfiled: false }) }),
+
+  setShowUnfiled: (value) => set({ showUnfiled: value, ...(value && { selectedFolderId: null }) }),
 
   toggleFolderExpanded: (id) =>
     set((state) => {

@@ -9,7 +9,7 @@ function getStoredSort(): { sortBy: SortBy; sortDirection: SortDirection } {
     const stored = localStorage.getItem('pike-notes-sort');
     if (stored) {
       const parsed = JSON.parse(stored);
-      const sortBy = (['updated_at', 'created_at', 'title'] as SortBy[]).includes(parsed.sortBy)
+      const sortBy = (['updated_at', 'created_at', 'title', 'custom'] as SortBy[]).includes(parsed.sortBy)
         ? parsed.sortBy : 'updated_at';
       const sortDirection = parsed.sortDirection === 'asc' ? 'asc' : 'desc';
       return { sortBy, sortDirection };

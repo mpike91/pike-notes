@@ -33,8 +33,8 @@ export function useSettingsSync() {
       if (error || !data) {
         // No row exists yet — seed from current localStorage state
         const settings = useSettingsStore.getState();
-        const theme = useUIStore.getState().theme;
-        const json = settings._toJson(theme);
+        const uiState = useUIStore.getState();
+        const json = settings._toJson(uiState.theme, uiState.accentColor);
 
         await supabase
           .from('user_settings')
@@ -50,6 +50,8 @@ export function useSettingsSync() {
         if (json.theme) {
           useUIStore.getState().setTheme(json.theme as Theme);
         }
+        // Sync accent color
+        useUIStore.getState().setAccentColor(json.accentColor ?? null);
       }
     }
 
@@ -58,38 +60,28 @@ export function useSettingsSync() {
 
   // Subscribe to settings changes and sync to DB
   useEffect(() => {
-    const unsubSettings = useSettingsStore.subscribe(() => {
+    const syncToDb = () => {
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
       debounceTimer.current = setTimeout(async () => {
         const supabase = createClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        const theme = useUIStore.getState().theme;
-        const json = useSettingsStore.getState()._toJson(theme);
+        const uiState = useUIStore.getState();
+        const json = useSettingsStore.getState()._toJson(uiState.theme, uiState.accentColor);
 
         await supabase
           .from('user_settings')
           .upsert({ user_id: user.id, settings: json as unknown as Json, updated_at: new Date().toISOString() });
       }, DEBOUNCE_MS);
-    });
+    };
+
+    const unsubSettings = useSettingsStore.subscribe(syncToDb);
 
     const unsubTheme = useUIStore.subscribe(
       (state, prevState) => {
-        if (state.theme !== prevState.theme) {
-          if (debounceTimer.current) clearTimeout(debounceTimer.current);
-          debounceTimer.current = setTimeout(async () => {
-            const supabase = createClient();
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
-
-            const theme = useUIStore.getState().theme;
-            const json = useSettingsStore.getState()._toJson(theme);
-
-            await supabase
-              .from('user_settings')
-              .upsert({ user_id: user.id, settings: json as unknown as Json, updated_at: new Date().toISOString() });
-          }, DEBOUNCE_MS);
+        if (state.theme !== prevState.theme || state.accentColor !== prevState.accentColor) {
+          syncToDb();
         }
       }
     );

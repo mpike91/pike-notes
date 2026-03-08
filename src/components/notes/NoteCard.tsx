@@ -9,11 +9,11 @@ import { CSS } from '@dnd-kit/utilities';
 interface NoteCardProps {
   note: Note;
   isActive?: boolean;
-  isDraggable?: boolean;
+  folderName?: string;
   onClick?: (note: Note) => void;
 }
 
-export function NoteCard({ note, isActive, isDraggable, onClick }: NoteCardProps) {
+export function NoteCard({ note, isActive, folderName, onClick }: NoteCardProps) {
   const preview = note.content ? truncate(note.content.replace(/\n/g, ' '), 120) : '';
 
   const {
@@ -25,44 +25,33 @@ export function NoteCard({ note, isActive, isDraggable, onClick }: NoteCardProps
     isDragging,
   } = useSortable({
     id: note.id,
-    disabled: !isDraggable,
     data: { type: 'note', noteId: note.id },
   });
 
-  const style = isDraggable
-    ? {
-        transform: CSS.Transform.toString(transform),
-        transition,
-        opacity: isDragging ? 0.5 : 1,
-      }
-    : undefined;
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
 
   const content = (
     <>
-      <div className="flex items-center gap-1.5">
-        {isDraggable && (
-          <span
-            className="shrink-0 cursor-grab text-text-muted/50 hover:text-text-muted opacity-0 group-hover:opacity-100 transition-opacity"
-            {...listeners}
-          >
-            <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 16 16">
-              <circle cx="5" cy="3" r="1.2" />
-              <circle cx="11" cy="3" r="1.2" />
-              <circle cx="5" cy="8" r="1.2" />
-              <circle cx="11" cy="8" r="1.2" />
-              <circle cx="5" cy="13" r="1.2" />
-              <circle cx="11" cy="13" r="1.2" />
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-1.5 min-w-0">
+          {note.is_pinned && (
+            <svg className="h-3 w-3 shrink-0 text-accent" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
             </svg>
+          )}
+          <h3 className="text-sm font-medium text-text-primary truncate">
+            {note.title || 'Untitled'}
+          </h3>
+        </div>
+        {folderName && (
+          <span className="shrink-0 bg-bg-tertiary text-text-muted rounded px-1.5 py-0.5 text-[10px] leading-none mt-0.5">
+            {folderName}
           </span>
         )}
-        {note.is_pinned && !isDraggable && (
-          <svg className="h-3 w-3 shrink-0 text-accent" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-          </svg>
-        )}
-        <h3 className="text-sm font-medium text-text-primary truncate">
-          {note.title || 'Untitled'}
-        </h3>
       </div>
       {preview && (
         <p className="mt-1 text-xs text-text-muted line-clamp-2 leading-relaxed">
@@ -79,7 +68,7 @@ export function NoteCard({ note, isActive, isDraggable, onClick }: NoteCardProps
     'block rounded-lg px-3.5 py-3 transition-colors group',
     isActive
       ? 'bg-accent/8 text-text-primary'
-      : 'hover:bg-bg-secondary'
+      : 'bg-bg-secondary hover:bg-bg-tertiary'
   );
 
   if (onClick) {
@@ -88,6 +77,7 @@ export function NoteCard({ note, isActive, isDraggable, onClick }: NoteCardProps
         ref={setNodeRef}
         style={style}
         {...attributes}
+        {...listeners}
         onClick={() => onClick(note)}
         className={cn(className, 'w-full text-left')}
       >
@@ -97,7 +87,7 @@ export function NoteCard({ note, isActive, isDraggable, onClick }: NoteCardProps
   }
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes}>
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
       <Link href={`/notes/${note.id}`} className={className}>
         {content}
       </Link>

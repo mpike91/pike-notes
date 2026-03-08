@@ -23,12 +23,14 @@ export default function NotesPage() {
   const setSortBy = useNotesStore((s) => s.setSortBy);
   const setSortDirection = useNotesStore((s) => s.setSortDirection);
   const selectedFolderId = useFoldersStore((s) => s.selectedFolderId);
+  const showUnfiled = useFoldersStore((s) => s.showUnfiled);
   const selectedFolder = useFoldersStore((s) => s.folders.find((f) => f.id === s.selectedFolderId));
 
   const filteredNotes = useMemo(() => {
-    if (!selectedFolderId) return notes;
-    return notes.filter((n) => n.folder_id === selectedFolderId);
-  }, [notes, selectedFolderId]);
+    if (showUnfiled) return notes.filter((n) => !n.folder_id);
+    if (selectedFolderId) return notes.filter((n) => n.folder_id === selectedFolderId);
+    return notes;
+  }, [notes, selectedFolderId, showUnfiled]);
 
   useEffect(() => {
     fetchNotes();
@@ -53,30 +55,35 @@ export default function NotesPage() {
   return (
     <>
       <AppHeader
-        title={selectedFolder ? selectedFolder.name : 'Notes'}
+        title={selectedFolder ? selectedFolder.name : showUnfiled ? 'Home' : 'Notes'}
         actions={
           <>
             {/* Sort controls */}
             <button
-              onClick={() => setSortBy(sortBy === 'updated_at' ? 'title' : 'updated_at')}
+              onClick={() => {
+                const next: Record<SortBy, SortBy> = { updated_at: 'title', title: 'custom', custom: 'updated_at', created_at: 'updated_at' };
+                setSortBy(next[sortBy]);
+              }}
               className="rounded-md px-2 py-1 text-xs font-medium text-text-muted hover:text-text-secondary hover:bg-bg-tertiary transition-colors"
-              title={`Sort by ${sortBy === 'updated_at' ? 'title' : 'date edited'}`}
+              title={`Sort by ${sortBy === 'updated_at' ? 'title' : sortBy === 'title' ? 'custom order' : 'date edited'}`}
             >
-              {sortBy === 'updated_at' ? 'Date' : 'A\u2013Z'}
+              {sortBy === 'updated_at' ? 'Date' : sortBy === 'title' ? 'A\u2013Z' : 'Custom'}
             </button>
-            <button
-              onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
-              className="rounded-md p-1.5 text-text-muted hover:text-text-secondary hover:bg-bg-tertiary transition-colors"
-              title={sortDirection === 'asc' ? 'Ascending' : 'Descending'}
-            >
-              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                {sortDirection === 'asc' ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                )}
-              </svg>
-            </button>
+            {sortBy !== 'custom' && (
+              <button
+                onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
+                className="rounded-md p-1.5 text-text-muted hover:text-text-secondary hover:bg-bg-tertiary transition-colors"
+                title={sortDirection === 'asc' ? 'Ascending' : 'Descending'}
+              >
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  {sortDirection === 'asc' ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                  )}
+                </svg>
+              </button>
+            )}
 
             {false && (
               <>
@@ -116,8 +123,8 @@ export default function NotesPage() {
             <svg className="h-10 w-10 text-text-muted/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
             </svg>
-            <p className="mt-4 text-sm text-text-muted">{selectedFolderId ? 'No notes in this folder' : 'No notes yet'}</p>
-            <p className="mt-1 text-xs text-text-muted/70">Press Ctrl+N to get started</p>
+            <p className="mt-4 text-sm text-text-muted">{selectedFolderId ? 'No notes in this folder' : showUnfiled ? 'No unfiled notes' : 'No notes yet'}</p>
+            <p className="mt-1 text-xs text-text-muted/70">Tap + New to get started</p>
           </div>
         ) : (
           <NotesList notes={filteredNotes} isLoading={isLoading} />

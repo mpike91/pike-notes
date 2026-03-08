@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useUIStore } from '@/stores/ui-store';
+import { useFoldersStore } from '@/stores/folders-store';
 import { FolderTree } from '@/components/folders/FolderTree';
 import { cn } from '@/lib/utils';
 
@@ -15,6 +16,10 @@ const navItems = [
 export function Sidebar() {
   const pathname = usePathname();
   const { sidebarCollapsed, toggleSidebar } = useUIStore();
+  const selectedFolderId = useFoldersStore((s) => s.selectedFolderId);
+  const showUnfiled = useFoldersStore((s) => s.showUnfiled);
+  const setSelectedFolderId = useFoldersStore((s) => s.setSelectedFolderId);
+  const setShowUnfiled = useFoldersStore((s) => s.setShowUnfiled);
 
   return (
     <aside
@@ -45,11 +50,15 @@ export function Sidebar() {
       {/* Navigation */}
       <nav className="py-2 px-2 space-y-0.5">
         {navItems.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+          const pathMatch = pathname === item.href || pathname.startsWith(item.href + '/');
+          const isActive = item.href === '/notes'
+            ? pathMatch && selectedFolderId === null && !showUnfiled
+            : pathMatch;
           return (
             <Link
               key={item.href}
               href={item.href}
+              onClick={item.href === '/notes' ? () => { setSelectedFolderId(null); setShowUnfiled(false); } : undefined}
               className={cn(
                 'flex items-center gap-3 rounded-md px-2.5 py-2 text-sm transition-colors',
                 sidebarCollapsed && 'justify-center px-2',
