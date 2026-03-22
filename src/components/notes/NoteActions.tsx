@@ -18,6 +18,7 @@ interface NoteActionsProps {
   onClearHomeNote?: () => void;
   isHomeNote?: boolean;
   onMoveToFolder?: (folderId: string | null) => void;
+  onNewNote?: () => void;
 }
 
 export function NoteActions({
@@ -33,6 +34,7 @@ export function NoteActions({
   onClearHomeNote,
   isHomeNote,
   onMoveToFolder,
+  onNewNote,
 }: NoteActionsProps) {
   const [open, setOpen] = useState(false);
   const [folderPickerOpen, setFolderPickerOpen] = useState(false);
@@ -79,6 +81,14 @@ export function NoteActions({
             </>
           ) : (
             <>
+              {onNewNote && (
+                <>
+                  <MenuItem onClick={() => { onNewNote(); setOpen(false); }}>
+                    New note
+                  </MenuItem>
+                  <div className="my-1 border-t border-border" />
+                </>
+              )}
               <MenuItem onClick={() => { onPin(); setOpen(false); }}>
                 {note.is_pinned ? 'Unpin' : 'Pin to top'}
               </MenuItem>

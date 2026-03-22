@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useCallback } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import { useDroppable } from '@dnd-kit/core';
 import { useFolders } from '@/hooks/use-folders';
 import { useFoldersStore } from '@/stores/folders-store';
@@ -24,10 +25,26 @@ export function FolderTree() {
   const showUnfiled = useFoldersStore((s) => s.showUnfiled);
   const setShowUnfiled = useFoldersStore((s) => s.setShowUnfiled);
 
+  const router = useRouter();
+  const pathname = usePathname();
   const sidebarCollapsed = useUIStore((s) => s.sidebarCollapsed);
 
   const tree = useMemo(() => buildFolderTree(folders), [folders]);
   const flatNodes = useMemo(() => flattenTree(tree, expandedFolderIds), [tree, expandedFolderIds]);
+
+  const handleSelectFolder = useCallback((id: string) => {
+    setSelectedFolderId(id);
+    if (pathname !== '/notes') {
+      router.push('/notes');
+    }
+  }, [setSelectedFolderId, pathname, router]);
+
+  const handleSelectUnfiled = useCallback(() => {
+    setShowUnfiled(true);
+    if (pathname !== '/notes') {
+      router.push('/notes');
+    }
+  }, [setShowUnfiled, pathname, router]);
 
   const handleCreateSubfolder = useCallback((parentId: string) => {
     createFolder(parentId);
@@ -43,7 +60,7 @@ export function FolderTree() {
     return (
       <div className="px-2 py-1">
         <button
-          onClick={() => setShowUnfiled(true)}
+          onClick={handleSelectUnfiled}
           className="flex justify-center w-full rounded-md p-2 text-text-muted hover:text-text-secondary hover:bg-sidebar-hover transition-colors"
           title="Folders"
         >
@@ -83,12 +100,12 @@ export function FolderTree() {
             : 'text-text-secondary hover:bg-sidebar-hover hover:text-text-primary',
           isOverAll && 'ring-1 ring-accent bg-accent/10'
         )}
-        onClick={() => setShowUnfiled(true)}
+        onClick={handleSelectUnfiled}
       >
         <svg className="h-4 w-4 shrink-0 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
         </svg>
-        <span>Home</span>
+        <span>Unfiled</span>
       </div>
 
       {/* Folder tree */}
@@ -99,7 +116,7 @@ export function FolderTree() {
             node={node}
             isSelected={selectedFolderId === node.folder.id}
             isExpanded={expandedFolderIds.has(node.folder.id)}
-            onSelect={setSelectedFolderId}
+            onSelect={handleSelectFolder}
             onToggleExpand={toggleFolderExpanded}
             onRename={renameFolder}
             onDelete={deleteFolder}

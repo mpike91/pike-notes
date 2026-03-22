@@ -2,6 +2,7 @@
 
 import { NoteActions } from '@/components/notes/NoteActions';
 import { useUIStore } from '@/stores/ui-store';
+import { cn } from '@/lib/utils';
 import type { Note } from '@/types';
 
 interface EditorHeaderProps {
@@ -69,28 +70,27 @@ export function EditorHeader({
         </svg>
       </button>
 
-      {onNewNote && (
-        <button
-          onClick={onNewNote}
-          tabIndex={-1}
-          className="rounded-md p-2 md:p-1.5 text-text-muted hover:text-text-secondary hover:bg-bg-tertiary transition-colors"
-          aria-label="New note"
-          title="New note"
-        >
-          <svg className="h-5 w-5 md:h-4 md:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
-        </button>
-      )}
-
       <input
         ref={titleRef}
         type="text"
         value={title}
         onChange={(e) => onTitleChange(e.target.value)}
         placeholder="Untitled"
-        className="flex-1 min-w-0 bg-transparent text-lg md:text-base font-medium text-text-primary placeholder:text-text-muted focus:outline-none! focus-visible:outline-none!"
+        className="flex-1 min-w-0 bg-transparent text-lg md:text-base font-medium text-text-primary placeholder:text-text-muted focus:outline-none! focus-visible:outline-none! text-ellipsis"
       />
+
+      {/* Save status indicator */}
+      <span className={cn(
+        'shrink-0 text-[11px] select-none transition-opacity duration-300',
+        saveStatus === 'idle' && 'opacity-0',
+        saveStatus === 'saving' && 'text-text-muted opacity-100',
+        saveStatus === 'saved' && 'text-text-muted opacity-100',
+        saveStatus === 'error' && 'text-danger opacity-100',
+      )}>
+        {saveStatus === 'saving' && 'Saving...'}
+        {saveStatus === 'saved' && 'Saved'}
+        {saveStatus === 'error' && 'Error'}
+      </span>
 
       {/* Indent/outdent — mobile only */}
       {onOutdent && (
@@ -207,6 +207,7 @@ export function EditorHeader({
         onClearHomeNote={onClearHomeNote}
         isHomeNote={isHomeNote}
         onMoveToFolder={onMoveToFolder}
+        onNewNote={onNewNote}
       />
     </div>
   );

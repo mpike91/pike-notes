@@ -145,7 +145,7 @@ export function MobileFolderBar() {
               : 'bg-bg-tertiary text-text-secondary hover:bg-bg-secondary'
           )}
         >
-          Home
+          Unfiled
         </button>
         {flatNodes.map((node) => {
           const label = node.depth > 0

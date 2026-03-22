@@ -1,15 +1,17 @@
 'use client';
 
-import { useEffect, useCallback, useMemo } from 'react';
+import { useEffect, useCallback, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { NotesList } from '@/components/notes/NotesList';
+import { SubfolderNotes } from '@/components/folders/SubfolderNotes';
 import { MobileFolderBar } from '@/components/folders/MobileFolderBar';
 import { useNotes } from '@/hooks/use-notes';
 import { useGlobalShortcuts, useShortcutListener } from '@/hooks/use-shortcuts';
 import { useUIStore } from '@/stores/ui-store';
 import { useNotesStore } from '@/stores/notes-store';
 import { useFoldersStore } from '@/stores/folders-store';
+import { getDescendantIds } from '@/lib/folder-utils';
 import type { SortBy } from '@/types';
 
 export default function NotesPage() {
@@ -24,13 +26,29 @@ export default function NotesPage() {
   const setSortDirection = useNotesStore((s) => s.setSortDirection);
   const selectedFolderId = useFoldersStore((s) => s.selectedFolderId);
   const showUnfiled = useFoldersStore((s) => s.showUnfiled);
-  const selectedFolder = useFoldersStore((s) => s.folders.find((f) => f.id === s.selectedFolderId));
+  const folders = useFoldersStore((s) => s.folders);
+  const selectedFolder = folders.find((f) => f.id === selectedFolderId);
+
+  const [showSubfolders, setShowSubfolders] = useState(false);
+
+  // Reset sub-folder expansion when folder changes
+  useEffect(() => {
+    setShowSubfolders(false);
+  }, [selectedFolderId]);
 
   const filteredNotes = useMemo(() => {
     if (showUnfiled) return notes.filter((n) => !n.folder_id);
     if (selectedFolderId) return notes.filter((n) => n.folder_id === selectedFolderId);
     return notes;
   }, [notes, selectedFolderId, showUnfiled]);
+
+  // Check if selected folder has descendant folders
+  const descendantFolderIds = useMemo(() => {
+    if (!selectedFolderId) return [];
+    return getDescendantIds(folders, selectedFolderId);
+  }, [folders, selectedFolderId]);
+
+  const hasSubfolders = descendantFolderIds.length > 0;
 
   useEffect(() => {
     fetchNotes();
@@ -55,7 +73,7 @@ export default function NotesPage() {
   return (
     <>
       <AppHeader
-        title={selectedFolder ? selectedFolder.name : showUnfiled ? 'Home' : 'Notes'}
+        title={selectedFolder ? selectedFolder.name : showUnfiled ? 'Unfiled' : 'Notes'}
         actions={
           <>
             {/* Sort controls */}
@@ -128,6 +146,16 @@ export default function NotesPage() {
           </div>
         ) : (
           <NotesList notes={filteredNotes} isLoading={isLoading} />
+        )}
+        {selectedFolderId && hasSubfolders && (
+          <SubfolderNotes
+            notes={notes}
+            folders={folders}
+            parentFolderId={selectedFolderId}
+            descendantFolderIds={descendantFolderIds}
+            showSubfolders={showSubfolders}
+            onToggle={() => setShowSubfolders((v) => !v)}
+          />
         )}
       </div>
     </>

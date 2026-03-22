@@ -72,11 +72,34 @@ export function CodeMirrorEditor({
       if (!view) return;
       const { state } = view;
       const line = state.doc.lineAt(state.selection.main.head);
+      const lineText = state.doc.sliceString(line.from, line.to);
       const spaces = ' '.repeat(tabSize);
-      view.dispatch({
-        changes: { from: line.from, insert: spaces },
-        selection: { anchor: state.selection.main.head + tabSize },
-      });
+
+      // Cycle list marker on indent: 1. → a) → -
+      const numberedMatch = lineText.match(/^(\s*)(\d+\.)\s/);
+      const letteredMatch = lineText.match(/^(\s*)([a-z]\))\s/);
+      if (numberedMatch) {
+        const [, indent] = numberedMatch;
+        const newLine = lineText.replace(/^(\s*)\d+\.\s/, `${indent}${spaces}a) `);
+        const diff = newLine.length - lineText.length;
+        view.dispatch({
+          changes: { from: line.from, to: line.to, insert: newLine },
+          selection: { anchor: state.selection.main.head + diff },
+        });
+      } else if (letteredMatch) {
+        const [, indent] = letteredMatch;
+        const newLine = lineText.replace(/^(\s*)[a-z]\)\s/, `${indent}${spaces}- `);
+        const diff = newLine.length - lineText.length;
+        view.dispatch({
+          changes: { from: line.from, to: line.to, insert: newLine },
+          selection: { anchor: state.selection.main.head + diff },
+        });
+      } else {
+        view.dispatch({
+          changes: { from: line.from, insert: spaces },
+          selection: { anchor: state.selection.main.head + tabSize },
+        });
+      }
       view.focus();
     },
     outdent: () => {
@@ -87,12 +110,37 @@ export function CodeMirrorEditor({
       const lineText = state.doc.sliceString(line.from, line.to);
       const leadingSpaces = lineText.match(/^ */)?.[0].length ?? 0;
       const removeCount = Math.min(tabSize, leadingSpaces);
-      if (removeCount === 0) return;
-      const cursorOffset = Math.min(removeCount, state.selection.main.head - line.from);
-      view.dispatch({
-        changes: { from: line.from, to: line.from + removeCount },
-        selection: { anchor: state.selection.main.head - cursorOffset },
-      });
+      if (removeCount === 0) {
+        view.focus();
+        return;
+      }
+
+      // Cycle list marker on outdent: - → a) → 1.
+      const bulletMatch = lineText.match(/^(\s*)([-*+])\s/);
+      const letteredMatch = lineText.match(/^(\s*)([a-z]\))\s/);
+      if (bulletMatch && leadingSpaces >= tabSize) {
+        const stripped = lineText.slice(removeCount);
+        const newLine = stripped.replace(/^([-*+])\s/, 'a) ');
+        const diff = lineText.length - newLine.length;
+        view.dispatch({
+          changes: { from: line.from, to: line.to, insert: newLine },
+          selection: { anchor: Math.max(line.from, state.selection.main.head - diff) },
+        });
+      } else if (letteredMatch && leadingSpaces >= tabSize) {
+        const stripped = lineText.slice(removeCount);
+        const newLine = stripped.replace(/^[a-z]\)\s/, '1. ');
+        const diff = lineText.length - newLine.length;
+        view.dispatch({
+          changes: { from: line.from, to: line.to, insert: newLine },
+          selection: { anchor: Math.max(line.from, state.selection.main.head - diff) },
+        });
+      } else {
+        const cursorOffset = Math.min(removeCount, state.selection.main.head - line.from);
+        view.dispatch({
+          changes: { from: line.from, to: line.from + removeCount },
+          selection: { anchor: state.selection.main.head - cursorOffset },
+        });
+      }
       view.focus();
     },
     moveUp: () => {
@@ -209,7 +257,7 @@ export function CodeMirrorEditor({
 
         // Check if this line is ONLY a list marker (any indent level, no real content).
         // This must be checked first so empty items exit immediately at any depth.
-        const emptyListLine = /^\s*([-*+]|\d+\.)\s*$/.test(lineText);
+        const emptyListLine = /^\s*([-*+]|\d+\.|[a-z]\))\s*$/.test(lineText);
         if (emptyListLine) {
           view.dispatch({
             changes: { from: line.from, to: line.to, insert: '' },
@@ -218,8 +266,8 @@ export function CodeMirrorEditor({
           return true;
         }
 
-        // Match list markers for continuation: "- ", "* ", "+ ", "1. ", "12. ", etc.
-        const listMatch = lineText.match(/^(\s*)([-*+]|\d+\.)\s/);
+        // Match list markers for continuation: "- ", "* ", "+ ", "1. ", "12. ", "a) ", etc.
+        const listMatch = lineText.match(/^(\s*)([-*+]|\d+\.|[a-z]\))\s/);
         if (!listMatch) return false;
 
         // Cursor at line start: just push the list item down (standard Enter behavior)
@@ -236,7 +284,9 @@ export function CodeMirrorEditor({
         // Non-empty: continue list, carrying text after cursor to the new line
         const newMarker = /^\d+\./.test(marker)
           ? `${parseInt(marker) + 1}.`
-          : marker;
+          : /^[a-z]\)/.test(marker)
+            ? `${String.fromCharCode(marker.charCodeAt(0) >= 122 ? 97 : marker.charCodeAt(0) + 1)})`
+            : marker;
         const textAfterCursor = state.doc.sliceString(pos, line.to);
         const newLinePrefix = `\n${indent}${newMarker} `;
 
@@ -259,7 +309,7 @@ export function CodeMirrorEditor({
         const lineText = state.doc.sliceString(line.from, line.to);
 
         // Only handle lines that are JUST a list marker with no content
-        if (!/^\s*([-*+]|\d+\.)\s*$/.test(lineText)) return false;
+        if (!/^\s*([-*+]|\d+\.|[a-z]\))\s*$/.test(lineText)) return false;
 
         // Don't intercept if cursor is at the very start of the line (default backspace joins lines)
         if (pos === line.from) return false;
@@ -276,7 +326,7 @@ export function CodeMirrorEditor({
 
   // Hanging indent plugin: aligns wrapped list text with content start
   const hangingIndentPlugin = useCallback(() => {
-    const listPattern = /^(\s*)([-*+]|\d+\.)\s/;
+    const listPattern = /^(\s*)([-*+]|\d+\.|[a-z]\))\s/;
 
     function buildDecorations(view: EditorView): DecorationSet {
       const builder = new RangeSetBuilder<Decoration>();

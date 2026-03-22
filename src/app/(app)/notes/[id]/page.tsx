@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { cn } from '@/lib/utils';
 import { CodeMirrorEditor } from '@/components/editor/CodeMirrorEditor';
 import type { CodeMirrorEditorHandle } from '@/components/editor/CodeMirrorEditor';
 import { EditorHeader } from '@/components/editor/EditorHeader';
@@ -273,18 +272,6 @@ export default function NoteEditorPage() {
           autoFocus={!isNewNote}
         />
 
-        {/* Save indicator */}
-        <span className={cn(
-          'absolute bottom-3 left-5 md:left-8 z-10 text-[11px] select-none transition-opacity duration-300',
-          saveStatus === 'idle' && 'opacity-0',
-          saveStatus === 'saving' && 'text-text-muted/50 opacity-100',
-          saveStatus === 'saved' && 'text-text-muted/50 opacity-100',
-          saveStatus === 'error' && 'text-danger opacity-100',
-        )}>
-          {saveStatus === 'saving' && 'Saving...'}
-          {saveStatus === 'saved' && 'Saved'}
-          {saveStatus === 'error' && 'Error'}
-        </span>
       </div>
 
       {focusModeActive && (
