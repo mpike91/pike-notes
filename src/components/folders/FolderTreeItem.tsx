@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useDroppable } from '@dnd-kit/core';
+import { useDroppable, useDraggable } from '@dnd-kit/core';
 import { cn } from '@/lib/utils';
 import type { FolderTreeNode } from '@/types';
 
@@ -35,10 +35,21 @@ export function FolderTreeItem({
   const menuRef = useRef<HTMLDivElement>(null);
   const hasChildren = node.children.length > 0;
 
-  const { isOver, setNodeRef } = useDroppable({
+  const { isOver, setNodeRef: setDropRef } = useDroppable({
     id: `folder-drop-${node.folder.id}`,
     data: { type: 'folder', folderId: node.folder.id },
   });
+
+  const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({
+    id: `folder-drag-${node.folder.id}`,
+    data: { type: 'folder-drag', folderId: node.folder.id, folderName: node.folder.name },
+    disabled: isRenaming,
+  });
+
+  const setNodeRef = useCallback((el: HTMLElement | null) => {
+    setDropRef(el);
+    setDragRef(el);
+  }, [setDropRef, setDragRef]);
 
   const [wasDropped, setWasDropped] = useState(false);
   const wasOverRef = useRef(false);
@@ -103,13 +114,16 @@ export function FolderTreeItem({
           isSelected
             ? 'bg-sidebar-active text-text-primary font-medium'
             : 'text-text-secondary hover:bg-sidebar-hover hover:text-text-primary',
-          isOver && 'ring-1 ring-accent bg-accent/10',
-          wasDropped && 'bg-accent/15 transition-colors duration-500'
+          isOver && !isDragging && 'ring-1 ring-accent bg-accent/10',
+          wasDropped && 'bg-accent/15 transition-colors duration-500',
+          isDragging && 'opacity-40'
         )}
         style={{ paddingLeft: `${node.depth * 16 + 8}px` }}
         onClick={() => onSelect(node.folder.id)}
         onDoubleClick={() => { setIsRenaming(true); setRenameValue(node.folder.name); }}
         onContextMenu={handleContextMenu}
+        {...attributes}
+        {...listeners}
       >
         {/* Expand/collapse chevron */}
         <button

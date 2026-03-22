@@ -1,12 +1,13 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import {
   DndContext,
   PointerSensor,
   KeyboardSensor,
   useSensor,
   useSensors,
+  type DragStartEvent,
   type DragEndEvent,
   type CollisionDetection,
   DragOverlay,
@@ -27,11 +28,18 @@ interface DndProviderProps {
  * is over them, otherwise fall back to closestCenter for sortable reordering.
  */
 const folderFirstCollision: CollisionDetection = (args) => {
+  const activeData = args.active.data.current;
+  const activeFolderId = activeData?.type === 'folder-drag' ? activeData.folderId : null;
+
   // Check pointer-within first — this catches folder droppables
   const pointerCollisions = pointerWithin(args);
-  const folderHit = pointerCollisions.find(
-    (c) => c.data?.droppableContainer?.data?.current?.type === 'folder'
-  );
+  const folderHit = pointerCollisions.find((c) => {
+    const data = c.data?.droppableContainer?.data?.current;
+    if (data?.type !== 'folder') return false;
+    // Skip a folder's own drop zone when dragging it
+    if (activeFolderId && data.folderId === activeFolderId) return false;
+    return true;
+  });
   if (folderHit) return [folderHit];
 
   // Fall back to closestCenter for sortable note reordering
@@ -39,22 +47,42 @@ const folderFirstCollision: CollisionDetection = (args) => {
 };
 
 export function DndProvider({ children }: DndProviderProps) {
-  const { moveNoteToFolder } = useFolders();
+  const { moveNoteToFolder, moveFolder } = useFolders();
   const { reorderPinnedNotes, reorderNotes } = useNotes();
   const notes = useNotesStore((s) => s.notes);
   const sortBy = useNotesStore((s) => s.sortBy);
+
+  const [activeDrag, setActiveDrag] = useState<{ type: string; name?: string } | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    const data = event.active.data.current;
+    if (data?.type === 'folder-drag') {
+      setActiveDrag({ type: 'folder', name: data.folderName as string });
+    } else {
+      setActiveDrag(null);
+    }
+  }, []);
+
   const handleDragEnd = useCallback((event: DragEndEvent) => {
+    setActiveDrag(null);
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
     const activeData = active.data.current;
     const overData = over.data.current;
+
+    // Folder dropped on folder
+    if (activeData?.type === 'folder-drag' && overData?.type === 'folder') {
+      const folderId = activeData.folderId as string;
+      const targetFolderId = overData.folderId as string | null;
+      moveFolder(folderId, targetFolderId);
+      return;
+    }
 
     // Note dropped on folder
     if (activeData?.type === 'note' && overData?.type === 'folder') {
@@ -98,16 +126,26 @@ export function DndProvider({ children }: DndProviderProps) {
         reorderNotes(reordered.map((n) => n.id));
       }
     }
-  }, [moveNoteToFolder, reorderPinnedNotes, reorderNotes, notes, sortBy]);
+  }, [moveNoteToFolder, moveFolder, reorderPinnedNotes, reorderNotes, notes, sortBy]);
 
   return (
     <DndContext
       sensors={sensors}
       collisionDetection={folderFirstCollision}
+      onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
       {children}
-      <DragOverlay dropAnimation={null} />
+      <DragOverlay dropAnimation={null}>
+        {activeDrag?.type === 'folder' && (
+          <div className="flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium bg-surface border border-border shadow-lg text-text-primary">
+            <svg className="h-4 w-4 shrink-0 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
+            </svg>
+            {activeDrag.name}
+          </div>
+        )}
+      </DragOverlay>
     </DndContext>
   );
 }
