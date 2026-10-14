@@ -30,6 +30,11 @@ interface EditorHeaderProps {
   onMoveToFolder?: (folderId: string | null) => void;
 }
 
+// Taking focus on tap collapses the editor's selection, so edit buttons only ever saw one line.
+function keepEditorSelection(e: React.PointerEvent | React.MouseEvent) {
+  e.preventDefault();
+}
+
 export function EditorHeader({
   note,
   title,
@@ -96,6 +101,8 @@ export function EditorHeader({
       {onOutdent && (
         <button
           onClick={onOutdent}
+          onPointerDown={keepEditorSelection}
+          onMouseDown={keepEditorSelection}
           tabIndex={-1}
           className="md:hidden rounded-md p-2 text-text-muted hover:text-text-secondary hover:bg-bg-tertiary transition-colors"
           aria-label="Outdent"
@@ -109,6 +116,8 @@ export function EditorHeader({
       {onIndent && (
         <button
           onClick={onIndent}
+          onPointerDown={keepEditorSelection}
+          onMouseDown={keepEditorSelection}
           tabIndex={-1}
           className="md:hidden rounded-md p-2 text-text-muted hover:text-text-secondary hover:bg-bg-tertiary transition-colors"
           aria-label="Indent"
@@ -122,6 +131,8 @@ export function EditorHeader({
       {onMoveLineUp && (
         <button
           onClick={onMoveLineUp}
+          onPointerDown={keepEditorSelection}
+          onMouseDown={keepEditorSelection}
           tabIndex={-1}
           className="md:hidden rounded-md p-2 text-text-muted hover:text-text-secondary hover:bg-bg-tertiary transition-colors"
           aria-label="Move line up"
@@ -135,6 +146,8 @@ export function EditorHeader({
       {onMoveLineDown && (
         <button
           onClick={onMoveLineDown}
+          onPointerDown={keepEditorSelection}
+          onMouseDown={keepEditorSelection}
           tabIndex={-1}
           className="md:hidden rounded-md p-2 text-text-muted hover:text-text-secondary hover:bg-bg-tertiary transition-colors"
           aria-label="Move line down"

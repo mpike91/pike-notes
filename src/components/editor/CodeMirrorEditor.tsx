@@ -9,7 +9,6 @@ import {
   defaultKeymap,
   history,
   historyKeymap,
-  indentWithTab,
   moveLineUp,
   moveLineDown,
   deleteLine,
@@ -17,6 +16,14 @@ import {
 } from '@codemirror/commands';
 import { indentUnit } from '@codemirror/language';
 import { markdown } from '@codemirror/lang-markdown';
+import {
+  indentList,
+  outdentList,
+  continueList,
+  clearEmptyListItem,
+  renumberLists,
+  LIST_ITEM_RE,
+} from '@/lib/editor/lists';
 
 const FONT_FAMILY_MAP: Record<string, string> = {
   inter: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
@@ -70,77 +77,13 @@ export function CodeMirrorEditor({
     indent: () => {
       const view = viewRef.current;
       if (!view) return;
-      const { state } = view;
-      const line = state.doc.lineAt(state.selection.main.head);
-      const lineText = state.doc.sliceString(line.from, line.to);
-      const spaces = ' '.repeat(tabSize);
-
-      // Cycle list marker on indent: 1. → a) → -
-      const numberedMatch = lineText.match(/^(\s*)(\d+\.)\s/);
-      const letteredMatch = lineText.match(/^(\s*)([a-z]\))\s/);
-      if (numberedMatch) {
-        const [, indent] = numberedMatch;
-        const newLine = lineText.replace(/^(\s*)\d+\.\s/, `${indent}${spaces}a) `);
-        const diff = newLine.length - lineText.length;
-        view.dispatch({
-          changes: { from: line.from, to: line.to, insert: newLine },
-          selection: { anchor: state.selection.main.head + diff },
-        });
-      } else if (letteredMatch) {
-        const [, indent] = letteredMatch;
-        const newLine = lineText.replace(/^(\s*)[a-z]\)\s/, `${indent}${spaces}- `);
-        const diff = newLine.length - lineText.length;
-        view.dispatch({
-          changes: { from: line.from, to: line.to, insert: newLine },
-          selection: { anchor: state.selection.main.head + diff },
-        });
-      } else {
-        view.dispatch({
-          changes: { from: line.from, insert: spaces },
-          selection: { anchor: state.selection.main.head + tabSize },
-        });
-      }
+      indentList(view);
       view.focus();
     },
     outdent: () => {
       const view = viewRef.current;
       if (!view) return;
-      const { state } = view;
-      const line = state.doc.lineAt(state.selection.main.head);
-      const lineText = state.doc.sliceString(line.from, line.to);
-      const leadingSpaces = lineText.match(/^ */)?.[0].length ?? 0;
-      const removeCount = Math.min(tabSize, leadingSpaces);
-      if (removeCount === 0) {
-        view.focus();
-        return;
-      }
-
-      // Cycle list marker on outdent: - → a) → 1.
-      const bulletMatch = lineText.match(/^(\s*)([-*+])\s/);
-      const letteredMatch = lineText.match(/^(\s*)([a-z]\))\s/);
-      if (bulletMatch && leadingSpaces >= tabSize) {
-        const stripped = lineText.slice(removeCount);
-        const newLine = stripped.replace(/^([-*+])\s/, 'a) ');
-        const diff = lineText.length - newLine.length;
-        view.dispatch({
-          changes: { from: line.from, to: line.to, insert: newLine },
-          selection: { anchor: Math.max(line.from, state.selection.main.head - diff) },
-        });
-      } else if (letteredMatch && leadingSpaces >= tabSize) {
-        const stripped = lineText.slice(removeCount);
-        const newLine = stripped.replace(/^[a-z]\)\s/, '1. ');
-        const diff = lineText.length - newLine.length;
-        view.dispatch({
-          changes: { from: line.from, to: line.to, insert: newLine },
-          selection: { anchor: Math.max(line.from, state.selection.main.head - diff) },
-        });
-      } else {
-        const cursorOffset = Math.min(removeCount, state.selection.main.head - line.from);
-        view.dispatch({
-          changes: { from: line.from, to: line.from + removeCount },
-          selection: { anchor: state.selection.main.head - cursorOffset },
-        });
-      }
+      outdentList(view);
       view.focus();
     },
     moveUp: () => {
@@ -221,6 +164,7 @@ export function CodeMirrorEditor({
               from: line.from,
               to: Math.min(line.to + 1, state.doc.length),
             },
+            userEvent: 'delete.cut',
           });
           return true;
         }
@@ -241,92 +185,15 @@ export function CodeMirrorEditor({
     },
   ]);
 
-  // List continuation: Enter continues lists, Enter/Backspace on empty list items exits list mode.
-  // Wrapped in Prec.high so it runs before defaultKeymap's insertNewlineAndIndent.
+  // Prec.high so list handling runs before defaultKeymap's insertNewlineAndIndent.
   const listKeymap = Prec.high(keymap.of([
-    {
-      key: 'Enter',
-      run: (view) => {
-        const { state } = view;
-        const range = state.selection.main;
-        if (!range.empty) return false;
-
-        const pos = range.head;
-        const line = state.doc.lineAt(pos);
-        const lineText = state.doc.sliceString(line.from, line.to);
-
-        // Check if this line is ONLY a list marker (any indent level, no real content).
-        // This must be checked first so empty items exit immediately at any depth.
-        const emptyListLine = /^\s*([-*+]|\d+\.|[a-z]\))\s*$/.test(lineText);
-        if (emptyListLine) {
-          view.dispatch({
-            changes: { from: line.from, to: line.to, insert: '' },
-            selection: { anchor: line.from },
-          });
-          return true;
-        }
-
-        // Match list markers for continuation: "- ", "* ", "+ ", "1. ", "12. ", "a) ", etc.
-        const listMatch = lineText.match(/^(\s*)([-*+]|\d+\.|[a-z]\))\s/);
-        if (!listMatch) return false;
-
-        // Cursor at line start: just push the list item down (standard Enter behavior)
-        if (pos === line.from) {
-          view.dispatch({
-            changes: { from: pos, insert: '\n' },
-            selection: { anchor: pos },
-          });
-          return true;
-        }
-
-        const [, indent, marker] = listMatch;
-
-        // Non-empty: continue list, carrying text after cursor to the new line
-        const newMarker = /^\d+\./.test(marker)
-          ? `${parseInt(marker) + 1}.`
-          : /^[a-z]\)/.test(marker)
-            ? `${String.fromCharCode(marker.charCodeAt(0) >= 122 ? 97 : marker.charCodeAt(0) + 1)})`
-            : marker;
-        const textAfterCursor = state.doc.sliceString(pos, line.to);
-        const newLinePrefix = `\n${indent}${newMarker} `;
-
-        view.dispatch({
-          changes: { from: pos, to: line.to, insert: newLinePrefix + textAfterCursor },
-          selection: { anchor: pos + newLinePrefix.length },
-        });
-        return true;
-      },
-    },
-    {
-      key: 'Backspace',
-      run: (view) => {
-        const { state } = view;
-        const range = state.selection.main;
-        if (!range.empty) return false;
-
-        const pos = range.head;
-        const line = state.doc.lineAt(pos);
-        const lineText = state.doc.sliceString(line.from, line.to);
-
-        // Only handle lines that are JUST a list marker with no content
-        if (!/^\s*([-*+]|\d+\.|[a-z]\))\s*$/.test(lineText)) return false;
-
-        // Don't intercept if cursor is at the very start of the line (default backspace joins lines)
-        if (pos === line.from) return false;
-
-        // Remove the marker, cursor to line start
-        view.dispatch({
-          changes: { from: line.from, to: line.to, insert: '' },
-          selection: { anchor: line.from },
-        });
-        return true;
-      },
-    },
+    { key: 'Enter', run: continueList },
+    { key: 'Backspace', run: clearEmptyListItem },
+    { key: 'Tab', run: indentList, shift: outdentList },
   ]));
 
   // Hanging indent plugin: aligns wrapped list text with content start
   const hangingIndentPlugin = useCallback(() => {
-    const listPattern = /^(\s*)([-*+]|\d+\.|[a-z]\))\s/;
 
     function buildDecorations(view: EditorView): DecorationSet {
       const builder = new RangeSetBuilder<Decoration>();
@@ -339,7 +206,7 @@ export function CodeMirrorEditor({
         for (let pos = from; pos <= to; ) {
           const line = view.state.doc.lineAt(pos);
           const lineText = view.state.doc.sliceString(line.from, line.to);
-          const match = lineText.match(listPattern);
+          const match = lineText.match(LIST_ITEM_RE);
           if (match) {
             const pxWidth = ctx.measureText(match[0]).width;
             builder.add(
@@ -383,7 +250,8 @@ export function CodeMirrorEditor({
         history(),
         listKeymap,
         cutLineKeymap,
-        keymap.of([...historyKeymap, { key: 'Ctrl-Shift-z', run: redo }, indentWithTab]),
+        keymap.of([...historyKeymap, { key: 'Ctrl-Shift-z', run: redo }]),
+        renumberLists,
         keymap.of(defaultKeymap),
         indentUnit.of(' '.repeat(tabSize)),
         EditorView.lineWrapping,
