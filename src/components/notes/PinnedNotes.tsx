@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useNotesStore } from '@/stores/notes-store';
 import { useUIStore } from '@/stores/ui-store';
-import { getPinnedNotes } from '@/lib/pinned';
+import { getPinnedNotes } from '@/lib/note-lists';
 import { cn } from '@/lib/utils';
 
 export function PinnedNotes() {

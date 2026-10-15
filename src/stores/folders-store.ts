@@ -1,6 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
+import type { NotesView } from '@/lib/notes-view';
 import type { Folder } from '@/types';
 import { getDescendantIds } from '@/lib/folder-utils';
 
@@ -21,6 +22,8 @@ interface FoldersState {
   folders: Folder[];
   selectedFolderId: string | null;
   showUnfiled: boolean;
+  /** Mobile only: the flat All Notes list, as opposed to the folder home screen. */
+  showAllNotes: boolean;
   expandedFolderIds: Set<string>;
 
   setFolders: (folders: Folder[]) => void;
@@ -30,6 +33,7 @@ interface FoldersState {
   removeFolderAndDescendants: (id: string) => void;
   setSelectedFolderId: (id: string | null) => void;
   setShowUnfiled: (value: boolean) => void;
+  applyView: (view: NotesView) => void;
   toggleFolderExpanded: (id: string) => void;
   expandFolder: (id: string) => void;
 }
@@ -40,6 +44,7 @@ export const useFoldersStore = create<FoldersState>((set) => ({
   folders: [],
   selectedFolderId: null,
   showUnfiled: false,
+  showAllNotes: false,
   expandedFolderIds: storedExpanded,
 
   setFolders: (folders) => set({ folders }),
@@ -71,9 +76,15 @@ export const useFoldersStore = create<FoldersState>((set) => ({
       };
     }),
 
-  setSelectedFolderId: (id) => set({ selectedFolderId: id, ...(id != null && { showUnfiled: false }) }),
+  setSelectedFolderId: (id) => set({ selectedFolderId: id, ...(id != null && { showUnfiled: false, showAllNotes: false }) }),
 
-  setShowUnfiled: (value) => set({ showUnfiled: value, ...(value && { selectedFolderId: null }) }),
+  setShowUnfiled: (value) => set({ showUnfiled: value, ...(value && { selectedFolderId: null, showAllNotes: false }) }),
+
+  applyView: (view) => set({
+    selectedFolderId: view.kind === 'folder' ? view.id : null,
+    showUnfiled: view.kind === 'unfiled',
+    showAllNotes: view.kind === 'all',
+  }),
 
   toggleFolderExpanded: (id) =>
     set((state) => {

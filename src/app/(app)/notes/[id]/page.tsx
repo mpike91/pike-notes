@@ -14,7 +14,12 @@ import { useGlobalShortcuts, useShortcutListener } from '@/hooks/use-shortcuts';
 import { useUIStore } from '@/stores/ui-store';
 import { useSettingsStore } from '@/stores/settings-store';
 import { useNotesStore } from '@/stores/notes-store';
+import { useFoldersStore } from '@/stores/folders-store';
+import { notesHref, viewFromState } from '@/lib/notes-view';
 import type { Note } from '@/types';
+
+// Return to whichever list the note was opened from.
+const notesHrefFromStore = () => notesHref(viewFromState(useFoldersStore.getState()));
 
 export default function NoteEditorPage() {
   const params = useParams();
@@ -73,7 +78,7 @@ export default function NoteEditorPage() {
         .single();
 
       if (error || !data) {
-        router.push('/notes');
+        router.push(notesHrefFromStore());
         return;
       }
 
@@ -112,7 +117,7 @@ export default function NoteEditorPage() {
   }, [note, title, content, updateNote]);
 
   const handleBack = useCallback(() => {
-    router.push('/notes');
+    router.push(notesHrefFromStore());
   }, [router]);
 
   const handleCopy = useCallback(() => {
@@ -123,21 +128,21 @@ export default function NoteEditorPage() {
   const handleTrash = useCallback(async () => {
     if (note) {
       await trashNote(note.id);
-      router.push('/notes');
+      router.push(notesHrefFromStore());
     }
   }, [note, trashNote, router]);
 
   const handleDelete = useCallback(async () => {
     if (note) {
       await deleteNote(note.id);
-      router.push('/notes');
+      router.push(notesHrefFromStore());
     }
   }, [note, deleteNote, router]);
 
   const handleRestore = useCallback(async () => {
     if (note) {
       await updateNote(note.id, { is_trashed: false });
-      router.push('/notes');
+      router.push(notesHrefFromStore());
     }
   }, [note, updateNote, router]);
 
@@ -153,7 +158,7 @@ export default function NoteEditorPage() {
         await unarchiveNote(note.id);
       } else {
         await archiveNote(note.id);
-        router.push('/notes');
+        router.push(notesHrefFromStore());
       }
     }
   }, [note, archiveNote, unarchiveNote, router]);

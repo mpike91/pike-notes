@@ -25,6 +25,8 @@ beforeEach(() => {
   useFoldersStore.setState({
     folders: [],
     selectedFolderId: null,
+    showUnfiled: false,
+    showAllNotes: false,
     expandedFolderIds: new Set(),
   });
 });
@@ -123,5 +125,21 @@ describe('setSelectedFolderId', () => {
     expect(useFoldersStore.getState().selectedFolderId).toBe('a');
     useFoldersStore.getState().setSelectedFolderId(null);
     expect(useFoldersStore.getState().selectedFolderId).toBeNull();
+  });
+});
+
+describe('applyView', () => {
+  it('opens a folder and leaves the other list modes', () => {
+    useFoldersStore.setState({ showAllNotes: true, showUnfiled: true });
+    useFoldersStore.getState().applyView({ kind: 'folder', id: 'f1' });
+    const { selectedFolderId, showUnfiled, showAllNotes } = useFoldersStore.getState();
+    expect({ selectedFolderId, showUnfiled, showAllNotes }).toEqual({ selectedFolderId: 'f1', showUnfiled: false, showAllNotes: false });
+  });
+
+  it('returns home by clearing every list mode', () => {
+    useFoldersStore.setState({ selectedFolderId: 'f1', showAllNotes: true });
+    useFoldersStore.getState().applyView({ kind: 'home' });
+    const { selectedFolderId, showUnfiled, showAllNotes } = useFoldersStore.getState();
+    expect({ selectedFolderId, showUnfiled, showAllNotes }).toEqual({ selectedFolderId: null, showUnfiled: false, showAllNotes: false });
   });
 });

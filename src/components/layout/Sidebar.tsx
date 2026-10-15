@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useUIStore } from '@/stores/ui-store';
 import { useFoldersStore } from '@/stores/folders-store';
 import { useNotesStore } from '@/stores/notes-store';
-import { getPinnedNotes } from '@/lib/pinned';
+import { getPinnedNotes } from '@/lib/note-lists';
 import { FolderTree } from '@/components/folders/FolderTree';
 import { PinnedNotes } from '@/components/notes/PinnedNotes';
 import { cn } from '@/lib/utils';
