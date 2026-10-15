@@ -1,10 +1,14 @@
 'use client';
 
 import Link from 'next/link';
+import { useMemo } from 'react';
 import { usePathname } from 'next/navigation';
 import { useUIStore } from '@/stores/ui-store';
 import { useFoldersStore } from '@/stores/folders-store';
+import { useNotesStore } from '@/stores/notes-store';
+import { getPinnedNotes } from '@/lib/pinned';
 import { FolderTree } from '@/components/folders/FolderTree';
+import { PinnedNotes } from '@/components/notes/PinnedNotes';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -20,6 +24,11 @@ export function Sidebar() {
   const showUnfiled = useFoldersStore((s) => s.showUnfiled);
   const setSelectedFolderId = useFoldersStore((s) => s.setSelectedFolderId);
   const setShowUnfiled = useFoldersStore((s) => s.setShowUnfiled);
+  const notes = useNotesStore((s) => s.notes);
+  const pinnedNoteOpen = useMemo(
+    () => getPinnedNotes(notes).some((n) => pathname === `/notes/${n.id}`),
+    [notes, pathname]
+  );
 
   return (
     <aside
@@ -52,7 +61,7 @@ export function Sidebar() {
         {navItems.map((item) => {
           const pathMatch = pathname === item.href || pathname.startsWith(item.href + '/');
           const isActive = item.href === '/notes'
-            ? pathMatch && selectedFolderId === null && !showUnfiled
+            ? pathMatch && selectedFolderId === null && !showUnfiled && !pinnedNoteOpen
             : pathMatch;
           return (
             <Link
@@ -75,9 +84,11 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Folders */}
-      <div className="flex-1 overflow-y-auto border-t border-border">
-        <FolderTree />
+      <div className="flex-1 overflow-y-auto">
+        <PinnedNotes />
+        <div className="border-t border-border">
+          <FolderTree />
+        </div>
       </div>
 
       {/* Settings link at bottom */}

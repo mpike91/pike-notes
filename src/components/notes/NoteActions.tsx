@@ -90,7 +90,7 @@ export function NoteActions({
                 </>
               )}
               <MenuItem onClick={() => { onPin(); setOpen(false); }}>
-                {note.is_pinned ? 'Unpin' : 'Pin to top'}
+                {note.is_pinned ? 'Unpin' : 'Pin'}
               </MenuItem>
               {isArchived ? (
                 <MenuItem onClick={() => { onArchive(); setOpen(false); }}>
