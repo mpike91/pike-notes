@@ -18,8 +18,9 @@ const serwist = new Serwist({
   runtimeCaching: [
     // Network-first for Supabase API calls
     {
+      // Single-row reads are the autosave's conflict check and must never be answered from cache.
       matcher({ url }) {
-        return url.hostname.includes("supabase.co");
+        return url.hostname.includes("supabase.co") && !url.search.includes("id=eq.");
       },
       handler: new NetworkFirst({
         cacheName: "supabase-api",

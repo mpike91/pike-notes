@@ -53,8 +53,10 @@ export function useSync() {
             const item = payload.new as TodoItem;
             state.updateTodoItem(item.id, item.note_id, item);
           } else if (payload.eventType === 'DELETE') {
-            const old = payload.old as { id: string; note_id: string };
-            state.removeTodoItem(old.id, old.note_id);
+            // Delete payloads carry only the primary key, so find the item's note locally.
+            const { id } = payload.old as { id: string };
+            const noteId = Object.keys(state.todoItems).find((nid) => state.todoItems[nid].some((t) => t.id === id));
+            if (noteId) state.removeTodoItem(id, noteId);
           }
         }
       )
@@ -90,21 +92,18 @@ export function useSync() {
   return null;
 }
 
-export function useOfflineSync() {
+/** Flushes queued offline writes on reconnect, then lets the caller refetch. */
+export function useOfflineSync(onFlushed?: () => void) {
   useEffect(() => {
-    function handleOnline() {
-      flushOfflineQueue();
+    async function handleOnline() {
+      await flushOfflineQueue();
+      onFlushed?.();
     }
 
     window.addEventListener('online', handleOnline);
 
-    // Flush queue on mount if already online
-    if (navigator.onLine) {
-      flushOfflineQueue();
-    }
-
     return () => {
       window.removeEventListener('online', handleOnline);
     };
-  }, []);
+  }, [onFlushed]);
 }

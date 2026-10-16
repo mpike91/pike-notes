@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/client';
-import { enqueueWrite, getQueuedWrites, removeQueuedWrite } from './offline-queue';
+import { getQueuedWrites, removeQueuedWrite } from './offline-queue';
 
 export async function flushOfflineQueue(): Promise<void> {
   const writes = await getQueuedWrites();

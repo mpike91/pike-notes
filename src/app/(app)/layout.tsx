@@ -5,12 +5,12 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { MobileNav } from '@/components/layout/MobileNav';
-import { SplitView } from '@/components/layout/SplitView';
 import { SearchModal } from '@/components/search/SearchModal';
 import { InstallPrompt } from '@/components/ui/InstallPrompt';
 import { useUIStore } from '@/stores/ui-store';
 import { useNotesStore } from '@/stores/notes-store';
 import { useSync, useOfflineSync } from '@/hooks/use-sync';
+import { flushOfflineQueue } from '@/lib/sync/engine';
 import { useOffline } from '@/hooks/use-offline';
 import { useGlobalShortcuts, useShortcutListener } from '@/hooks/use-shortcuts';
 import { useNotes } from '@/hooks/use-notes';
@@ -24,18 +24,21 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const router = useRouter();
   const focusModeActive = useUIStore((s) => s.focusModeActive);
-  const splitViewActive = useUIStore((s) => s.splitViewActive);
   const { isOnline } = useOffline();
   const isLoading = useNotesStore((s) => s.isLoading);
-
-  // Set up realtime sync, offline queue flushing, and settings sync
-  useSync();
-  useOfflineSync();
-  useSettingsSync();
 
   // Pre-fetch all notes + folders into store + refresh on tab focus (multi-device freshness)
   const { fetchNotes } = useNotes();
   const { fetchFolders } = useFolders();
+  const refresh = useCallback(() => {
+    fetchNotes();
+    fetchFolders();
+  }, [fetchNotes, fetchFolders]);
+
+  // Set up realtime sync, offline queue flushing, and settings sync
+  useSync();
+  useOfflineSync(refresh);
+  useSettingsSync();
   useEffect(() => {
     if (!isReady) return;
     const handleVisibility = () => {
@@ -58,16 +61,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) {
+    // getSession reads the local session, so the app still opens offline; RLS guards the data.
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session) {
         router.push('/login');
-      } else {
-        setIsReady(true);
-        fetchNotes();
-        fetchFolders();
+        return;
       }
+      setIsReady(true);
+      // Queued offline edits go up before the refetch, so the store doesn't show older text.
+      if (navigator.onLine) await flushOfflineQueue();
+      refresh();
     });
-  }, [router, fetchNotes]);
+  }, [router, refresh]);
 
   if (!isReady) {
     return (
@@ -95,15 +100,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           {!isOnline && (
             <div className="flex items-center justify-center gap-2 bg-warning/10 px-3 py-1.5 text-xs text-warning border-b border-warning/20">
               <div className="h-1.5 w-1.5 rounded-full bg-warning animate-pulse" />
-              You're offline. Changes will sync when you reconnect.
+              You're offline. Edits are saved on this device and sync when you reconnect.
             </div>
           )}
-          {splitViewActive ? (
-            <div className="hidden md:flex flex-1 overflow-hidden">
-              <SplitView />
-            </div>
-          ) : null}
-          <div className={cn(splitViewActive && 'md:hidden', 'flex-1 flex flex-col overflow-hidden')}>
+          <div className="flex-1 flex flex-col overflow-hidden">
             {children}
           </div>
         </main>

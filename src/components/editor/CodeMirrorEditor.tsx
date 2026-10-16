@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useCallback, useImperativeHandle } from 'react';
 import type { Ref } from 'react';
-import { EditorState, Prec, RangeSetBuilder } from '@codemirror/state';
+import { EditorState, Prec, RangeSetBuilder, Transaction } from '@codemirror/state';
 import { EditorView, keymap, ViewPlugin, Decoration, type DecorationSet } from '@codemirror/view';
 import type { ViewUpdate } from '@codemirror/view';
 import {
@@ -293,12 +293,14 @@ export function CodeMirrorEditor({
     const currentValue = view.state.doc.toString();
     if (currentValue !== value) {
       isExternalUpdate.current = true;
+      // Loads and remote edits aren't the user's typing; undoing them would save stale text.
       view.dispatch({
         changes: {
           from: 0,
           to: currentValue.length,
           insert: value,
         },
+        annotations: Transaction.addToHistory.of(false),
       });
       isExternalUpdate.current = false;
     }

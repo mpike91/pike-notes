@@ -11,11 +11,6 @@ interface UIState {
   focusModeActive: boolean;
   mobileNavOpen: boolean;
 
-  // Split view
-  splitViewActive: boolean;
-  splitViewFocusedPane: 'left' | 'right';
-  splitViewLeftNoteId: string | null;
-  splitViewRightNoteId: string | null;
 
   setTheme: (theme: Theme) => void;
   setAccentColor: (key: string | null) => void;
@@ -25,10 +20,6 @@ interface UIState {
   setFocusModeActive: (active: boolean) => void;
   setMobileNavOpen: (open: boolean) => void;
 
-  // Split view actions
-  toggleSplitView: (currentNoteId?: string | null) => void;
-  setSplitViewFocusedPane: (pane: 'left' | 'right') => void;
-  setSplitViewNoteId: (pane: 'left' | 'right', id: string | null) => void;
 }
 
 function getStoredTheme(): Theme {
@@ -94,11 +85,6 @@ export const useUIStore = create<UIState>((set, get) => ({
   focusModeActive: false,
   mobileNavOpen: false,
 
-  // Split view defaults
-  splitViewActive: false,
-  splitViewFocusedPane: 'left',
-  splitViewLeftNoteId: null,
-  splitViewRightNoteId: null,
 
   setTheme: (theme) => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -150,29 +136,4 @@ export const useUIStore = create<UIState>((set, get) => ({
   setFocusModeActive: (active) => set({ focusModeActive: active }),
 
   setMobileNavOpen: (open) => set({ mobileNavOpen: open }),
-
-  toggleSplitView: (currentNoteId) =>
-    set((state) => {
-      if (state.splitViewActive) {
-        // Turning OFF — reset split view state
-        return {
-          splitViewActive: false,
-          splitViewLeftNoteId: null,
-          splitViewRightNoteId: null,
-          splitViewFocusedPane: 'left' as const,
-        };
-      }
-      // Turning ON — move current note to left pane, right pane is null (shows list)
-      return {
-        splitViewActive: true,
-        splitViewLeftNoteId: currentNoteId ?? null,
-        splitViewRightNoteId: null,
-        splitViewFocusedPane: 'left',
-      };
-    }),
-
-  setSplitViewFocusedPane: (pane) => set({ splitViewFocusedPane: pane }),
-
-  setSplitViewNoteId: (pane, id) =>
-    set(pane === 'left' ? { splitViewLeftNoteId: id } : { splitViewRightNoteId: id }),
 }));

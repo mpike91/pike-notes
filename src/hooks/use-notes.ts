@@ -3,6 +3,8 @@
 import { useCallback, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useNotesStore } from '@/stores/notes-store';
+import { enqueueWrite } from '@/lib/sync/offline-queue';
+import { isNetworkError } from '@/lib/sync/draft';
 import type { Note, NoteInsert, NoteUpdate } from '@/types';
 
 export function useNotes() {
@@ -90,7 +92,11 @@ export function useNotes() {
       .update(updates)
       .eq('id', id);
 
-    if (error) {
+    if (error && isNetworkError(error)) {
+      // Keep the optimistic change; a refetch now would come from the offline cache and undo it.
+      await enqueueWrite({ table: 'notes', operation: 'update', data: { id, ...updates } });
+      store.setSaveStatus('offline');
+    } else if (error) {
       console.error('Error updating note:', error);
       store.setSaveStatus('error');
       // Refetch to revert optimistic update

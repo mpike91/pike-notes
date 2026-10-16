@@ -22,6 +22,9 @@ function saveSort(sortBy: SortBy, sortDirection: SortDirection) {
   localStorage.setItem('pike-notes-sort', JSON.stringify({ sortBy, sortDirection }));
 }
 
+/** `offline` means the edit is queued on this device and will sync on reconnect. */
+export type SaveStatus = 'idle' | 'saving' | 'saved' | 'offline' | 'error';
+
 interface NotesState {
   notes: Note[];
   todoItems: Record<string, TodoItem[]>; // keyed by note_id
@@ -30,7 +33,7 @@ interface NotesState {
   sortBy: SortBy;
   sortDirection: SortDirection;
   isLoading: boolean;
-  saveStatus: 'idle' | 'saving' | 'saved' | 'error';
+  saveStatus: SaveStatus;
 
   setNotes: (notes: Note[]) => void;
   addNote: (note: Note) => void;
@@ -41,7 +44,7 @@ interface NotesState {
   setSortBy: (sortBy: SortBy) => void;
   setSortDirection: (direction: SortDirection) => void;
   setIsLoading: (loading: boolean) => void;
-  setSaveStatus: (status: 'idle' | 'saving' | 'saved' | 'error') => void;
+  setSaveStatus: (status: SaveStatus) => void;
 
   setTodoItems: (noteId: string, items: TodoItem[]) => void;
   addTodoItem: (item: TodoItem) => void;

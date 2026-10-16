@@ -9,7 +9,7 @@ import { EditorHeader } from '@/components/editor/EditorHeader';
 import { FocusMode } from '@/components/editor/FocusMode';
 import { useNotes } from '@/hooks/use-notes';
 import { useFolders } from '@/hooks/use-folders';
-import { useDebouncedCallback } from '@/hooks/use-debounce';
+import { useNoteAutosave } from '@/hooks/use-note-autosave';
 import { useGlobalShortcuts, useShortcutListener } from '@/hooks/use-shortcuts';
 import { useUIStore } from '@/stores/ui-store';
 import { useSettingsStore } from '@/stores/settings-store';
@@ -91,34 +91,38 @@ export default function NoteEditorPage() {
     fetchNote();
   }, [noteId, router]);
 
-  const { debouncedFn: debouncedSave } = useDebouncedCallback(
-    (updates: { title?: string; content?: string }) => {
-      if (note) {
-        updateNote(note.id, updates);
-      }
+  const autosave = useNoteAutosave(note, {
+    onRemoteChange: (remote) => {
+      setTitle(remote.title);
+      setContent(remote.content);
     },
-    800
-  );
+    onConflict: async (local, server) => {
+      setTitle(server.title);
+      setContent(server.content);
+      const copy = await createNote('note', note?.folder_id ?? null);
+      if (copy) await updateNote(copy.id, { title: `${local.title || 'Untitled'} (conflict copy)`, content: local.content });
+      alert('This note was changed on another device. Its latest version is shown, and your edits were saved as a separate "conflict copy" note.');
+    },
+  });
 
   const handleTitleChange = useCallback((newTitle: string) => {
     setTitle(newTitle);
-    debouncedSave({ title: newTitle });
-  }, [debouncedSave]);
+    autosave.change({ title: newTitle });
+  }, [autosave]);
 
   const handleContentChange = useCallback((newContent: string) => {
     setContent(newContent);
-    debouncedSave({ content: newContent });
-  }, [debouncedSave]);
+    autosave.change({ content: newContent });
+  }, [autosave]);
 
   const handleForceSave = useCallback(() => {
-    if (note) {
-      updateNote(note.id, { title, content });
-    }
-  }, [note, title, content, updateNote]);
+    autosave.saveNow();
+  }, [autosave]);
 
   const handleBack = useCallback(() => {
+    void autosave.flush();
     router.push(notesHrefFromStore());
-  }, [router]);
+  }, [autosave, router]);
 
   const handleCopy = useCallback(() => {
     const text = [title, content].filter(Boolean).join('\n\n');
@@ -127,10 +131,11 @@ export default function NoteEditorPage() {
 
   const handleTrash = useCallback(async () => {
     if (note) {
+      await autosave.flush();
       await trashNote(note.id);
       router.push(notesHrefFromStore());
     }
-  }, [note, trashNote, router]);
+  }, [note, trashNote, router, autosave]);
 
   const handleDelete = useCallback(async () => {
     if (note) {
@@ -157,11 +162,12 @@ export default function NoteEditorPage() {
       if (note.is_archived) {
         await unarchiveNote(note.id);
       } else {
+        await autosave.flush();
         await archiveNote(note.id);
         router.push(notesHrefFromStore());
       }
     }
-  }, [note, archiveNote, unarchiveNote, router]);
+  }, [note, archiveNote, unarchiveNote, router, autosave]);
 
   const handlePin = useCallback(async () => {
     if (note) {
