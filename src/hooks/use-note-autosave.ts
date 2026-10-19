@@ -22,6 +22,13 @@ interface Handlers {
 
 const isNewer = (a: string, b: string) => Date.parse(a) > Date.parse(b);
 
+const openSessions = new Set<Session>();
+
+/** Saves every open note's pending edits; await before anything that reloads the page. */
+export function flushPendingSaves(): Promise<void> {
+  return Promise.all([...openSessions].map((s) => s.saver.flush())).then(() => undefined);
+}
+
 /**
  * Autosaves one open note: debounced, saved immediately on leave/hide, guarded against
  * overwriting edits from other devices. One session per note id, so a save that finishes
@@ -69,6 +76,7 @@ export function useNoteAutosave(note: Note | null, handlers: Handlers) {
       }),
     };
     sessionRef.current = session;
+    openSessions.add(session);
 
     const unsubscribe = useNotesStore.subscribe((state) => {
       if (session.saver.busy) return;
@@ -84,7 +92,7 @@ export function useNoteAutosave(note: Note | null, handlers: Handlers) {
 
     return () => {
       unsubscribe();
-      void session.saver.flush();
+      void session.saver.flush().finally(() => openSessions.delete(session));
       if (sessionRef.current === session) sessionRef.current = null;
     };
     // A session lives for one note id; later changes to `note` are metadata (pin, folder).

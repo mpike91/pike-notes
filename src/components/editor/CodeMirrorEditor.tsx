@@ -13,6 +13,7 @@ import {
   moveLineDown,
   deleteLine,
   redo,
+  undo,
 } from '@codemirror/commands';
 import { indentUnit } from '@codemirror/language';
 import { markdown } from '@codemirror/lang-markdown';
@@ -37,6 +38,8 @@ export interface CodeMirrorEditorHandle {
   outdent: () => void;
   moveUp: () => void;
   moveDown: () => void;
+  undo: () => void;
+  redo: () => void;
   getView: () => EditorView | null;
 }
 
@@ -96,6 +99,18 @@ export function CodeMirrorEditor({
       const view = viewRef.current;
       if (!view) return;
       moveLineDown(view);
+      view.focus();
+    },
+    undo: () => {
+      const view = viewRef.current;
+      if (!view) return;
+      undo(view);
+      view.focus();
+    },
+    redo: () => {
+      const view = viewRef.current;
+      if (!view) return;
+      redo(view);
       view.focus();
     },
     getView: () => viewRef.current,

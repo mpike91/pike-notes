@@ -23,6 +23,8 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
+  // Shrinks the layout when the keyboard opens, so the editor toolbar rides on top of it.
+  interactiveWidget: 'resizes-content',
   themeColor: '#ffffff',
 };
 

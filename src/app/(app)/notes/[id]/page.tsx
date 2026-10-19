@@ -7,6 +7,7 @@ import { CodeMirrorEditor } from '@/components/editor/CodeMirrorEditor';
 import type { CodeMirrorEditorHandle } from '@/components/editor/CodeMirrorEditor';
 import { EditorHeader } from '@/components/editor/EditorHeader';
 import { FocusMode } from '@/components/editor/FocusMode';
+import { EditorToolbar } from '@/components/editor/EditorToolbar';
 import { useNotes } from '@/hooks/use-notes';
 import { useFolders } from '@/hooks/use-folders';
 import { useNoteAutosave } from '@/hooks/use-note-autosave';
@@ -200,6 +201,8 @@ export default function NoteEditorPage() {
   const handleOutdent = useCallback(() => editorRef.current?.outdent(), []);
   const handleMoveLineUp = useCallback(() => editorRef.current?.moveUp(), []);
   const handleMoveLineDown = useCallback(() => editorRef.current?.moveDown(), []);
+  const handleUndo = useCallback(() => editorRef.current?.undo(), []);
+  const handleRedo = useCallback(() => editorRef.current?.redo(), []);
 
   const handleEditorWrapperMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const view = editorRef.current?.getView();
@@ -263,10 +266,6 @@ export default function NoteEditorPage() {
         onSetHomeNote={handleSetHomeNote}
         onClearHomeNote={handleClearHomeNote}
         isHomeNote={homeNoteId === note.id}
-        onIndent={handleIndent}
-        onOutdent={handleOutdent}
-        onMoveLineUp={handleMoveLineUp}
-        onMoveLineDown={handleMoveLineDown}
         onMoveToFolder={handleMoveToFolder}
       />
       <div className="relative flex flex-1 flex-col overflow-hidden px-5 py-4 md:px-8" onMouseDown={handleEditorWrapperMouseDown}>
@@ -284,6 +283,14 @@ export default function NoteEditorPage() {
         />
 
       </div>
+      <EditorToolbar
+        onUndo={handleUndo}
+        onRedo={handleRedo}
+        onOutdent={handleOutdent}
+        onIndent={handleIndent}
+        onMoveLineUp={handleMoveLineUp}
+        onMoveLineDown={handleMoveLineDown}
+      />
 
       {focusModeActive && (
         <FocusMode>

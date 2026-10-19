@@ -1,12 +1,13 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { MobileNav } from '@/components/layout/MobileNav';
 import { SearchModal } from '@/components/search/SearchModal';
 import { InstallPrompt } from '@/components/ui/InstallPrompt';
+import { UpdatePrompt } from '@/components/ui/UpdatePrompt';
 import { useUIStore } from '@/stores/ui-store';
 import { useNotesStore } from '@/stores/notes-store';
 import { useSync, useOfflineSync } from '@/hooks/use-sync';
@@ -24,6 +25,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const router = useRouter();
   const focusModeActive = useUIStore((s) => s.focusModeActive);
+  // The editor's own toolbar takes the bottom of the screen on mobile, so the tab bar steps aside.
+  const inEditor = /^\/notes\/[^/]+$/.test(usePathname());
+  const showMobileNav = !focusModeActive && !inEditor;
   const { isOnline } = useOffline();
   const isLoading = useNotesStore((s) => s.isLoading);
 
@@ -76,7 +80,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (!isReady) {
     return (
-      <div className="flex h-screen items-center justify-center bg-bg-primary">
+      <div className="flex h-dvh items-center justify-center bg-bg-primary">
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" />
       </div>
     );
@@ -84,11 +88,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <DndProvider>
-      <div className="flex h-screen overflow-hidden bg-bg-primary">
+      <div className="flex h-dvh overflow-hidden bg-bg-primary">
         {!focusModeActive && <Sidebar />}
         <main className={cn(
           'flex-1 flex flex-col overflow-hidden',
-          !focusModeActive && 'pb-16 md:pb-0'
+          showMobileNav && 'pb-16 md:pb-0'
         )}>
           {/* Loading bar */}
           {isLoading && (
@@ -107,9 +111,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             {children}
           </div>
         </main>
-        {!focusModeActive && <MobileNav />}
+        {showMobileNav && <MobileNav />}
         <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
         <InstallPrompt />
+        <UpdatePrompt />
       </div>
     </DndProvider>
   );
